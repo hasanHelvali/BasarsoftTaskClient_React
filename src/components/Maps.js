@@ -18,7 +18,7 @@ let map;
 let vectorLayer;
 let drawInteraction;
 let type;
-let isEndFeatureModalOpen=false;
+// let isEndFeatureModalOpen=false;
 let _data;
 
 // function addLayer() {
@@ -87,59 +87,60 @@ let _data;
 //     // Burada ilgili service yapısına datalar gonderildigi anda ilgili coordinates modalı acılır.
 //   });
 // }
-const Maps = () => {
+const Maps = () => {//map component baslangıcı
+  // const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false)
+  const {isEndFeatureModalOpen,handleStateModal } = useMyContext();
+  console.log(isEndFeatureModalOpen);
+  function addFeature(value) {
+    clearFeature()
+    if(value==="") {
+      map.removeInteraction(drawInteraction)
+      return;
+    }
+    vectorLayer.getSource().clear();
+    // this.generalDataService.selectedOptions.next(value)
+    // let that = this;
+    // // this.generalDataService.getFeatureType(value); //service deki feature tipini guncellestiriyorum.
+    drawInteraction = new Draw({
+      type:value 
+      // Çizilebilecek şekil türünü (Point, LineString, Polygon) seciyorum
+    });
+    map.addInteraction(drawInteraction); //interaction i map e ekliyorum.
+    // this.changeDetectorRef.detectChanges();
+    
+    // map.on('click', (event) => {
+    //   //her click edildiginde
+    //   const coordinateLong = event.coordinate[0];
+    //   const coordinateLat = event.coordinate[1];
+    // });
 
-  
-function addFeature(value) {
-  clearFeature()
-  if(value==="") {
-    map.removeInteraction(drawInteraction)
-    return;
+    drawInteraction.on('drawend', function (event) {
+      // that.generalDataService.setLocation(null);
+      // that.generalDataService._wkt=null;
+      //cizim bittiginde
+      handleStateModal(true)
+
+      var feature = event.feature;
+      // const _type: FeatureType = event.feature
+      //   .getGeometry()
+      //   .getType() as FeatureType;
+
+      vectorLayer.getSource().addFeature(feature);
+      var geometry = feature.getGeometry();
+      const data=new GeoLocation(geometry.getType(),geometry.getCoordinates())
+      _data=data
+      // setIsEndFeatureModalOpen(true);
+      console.log(data);
+      let wkt = geometryToWkt(feature)
+      console.log(wkt);
+      handleDataCapture(wkt)
+      clearFeature() 
+      clearInteraction()
+      // that.generalDataService.geometryToWkt(feature); //service class ında bir property ye wkt verisi aktarıldı.
+      // that.generalDataService.setLocation(data);
+      // Burada ilgili service yapısına datalar gonderildigi anda ilgili coordinates modalı acılır.
+    });
   }
-  vectorLayer.getSource().clear();
-  // this.generalDataService.selectedOptions.next(value)
-  // let that = this;
-  // // this.generalDataService.getFeatureType(value); //service deki feature tipini guncellestiriyorum.
-  drawInteraction = new Draw({
-    type:value 
-    // Çizilebilecek şekil türünü (Point, LineString, Polygon) seciyorum
-  });
-  map.addInteraction(drawInteraction); //interaction i map e ekliyorum.
-  // this.changeDetectorRef.detectChanges();
-  
-  // map.on('click', (event) => {
-  //   //her click edildiginde
-  //   const coordinateLong = event.coordinate[0];
-  //   const coordinateLat = event.coordinate[1];
-  // });
-
-  drawInteraction.on('drawend', function (event) {
-    // that.generalDataService.setLocation(null);
-    // that.generalDataService._wkt=null;
-    //cizim bittiginde
-
-
-    var feature = event.feature;
-    // const _type: FeatureType = event.feature
-    //   .getGeometry()
-    //   .getType() as FeatureType;
-
-    vectorLayer.getSource().addFeature(feature);
-    var geometry = feature.getGeometry();
-    const data=new GeoLocation(geometry.getType(),geometry.getCoordinates())
-    _data=data
-    isEndFeatureModalOpen=true;
-    console.log(data);
-    let wkt = geometryToWkt(feature)
-    console.log(wkt);
-    handleDataCapture(wkt)
-    clearFeature() 
-    clearInteraction()
-    // that.generalDataService.geometryToWkt(feature); //service class ında bir property ye wkt verisi aktarıldı.
-    // that.generalDataService.setLocation(data);
-    // Burada ilgili service yapısına datalar gonderildigi anda ilgili coordinates modalı acılır.
-  });
-}
 
   function clearFeature(){
     vectorLayer.getSource().clear();//Burada source icinde ki feature lar temizlendi.
@@ -149,7 +150,7 @@ function addFeature(value) {
   }
 
   function addLayer() {
-    vectorLayer = new VectorLayer({
+    vectorLayer = new VectorLayer({//global degiskene yeni bir layer ekleniyor.
       source: new VectorSource(),
       style: {
         'fill-color': 'rgba(0, 0, 0, 0.3)',
@@ -160,8 +161,9 @@ function addFeature(value) {
       },
       className: 'vecLay',
     });
-    map.addLayer(vectorLayer);
+    map.addLayer(vectorLayer);//layer globvaldeki haritaya ekleniyor.
   }
+  
   function _featureType(value){
     console.log(value);
   }
@@ -171,7 +173,7 @@ function addFeature(value) {
     //secilen selectbox degeri icin bir state tutuyorum. Baslangıcta bos degerde.
     
   useEffect(() => {//onInit in muadili bir yapı devrededir.
-    map = new Map({
+    map = new Map({//global degiskene yeni bir map nesnesi atandı.
       target: mapRef.current,
       layers: [
         new TileLayer({
@@ -183,15 +185,15 @@ function addFeature(value) {
         zoom: 6.8
       })
     });
-    addLayer();
-    return () => map
+    addLayer();//layer eklendi
+    return () => map//ilgili map nesnesi geri donduruluyor.
   }, []);
 
     const handleSelectChange = (value) => {
       setSelectedValue(value);//ilgili degeri state e alıp guncelliyorum.
       // map.removeInteraction(drawInteraction)
       // return;
-      console.log(value);
+      // console.log(value);
       addFeature(value)
     };
     const mapRef = useRef(null);

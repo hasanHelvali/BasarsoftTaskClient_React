@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { useMyContext } from '../context/DataContext';
 import { Box, Button, Modal, Typography } from '@mui/material';
 function EndFeatureModal(props) {
-    const { wkt, isModalOpen, handleStateModal,handleDataCapture ,featureType,handleFeatureType} = useMyContext();
+    const { wkt, isEndFeatureModalOpen, handleStateModal,handleDataCapture ,featureType,handleFeatureType} = useMyContext();
     const [value, setValue] = useState('')
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () =>{
       setOpen(false)
       handleDataCapture("")
-      console.log(wkt)
       handleStateModal(false)
       handleFeatureType("");
     };
@@ -21,32 +20,29 @@ function EndFeatureModal(props) {
       transform: 'translate(-50%, -50%)',
       width: 400,
       bgcolor: 'background.paper',
-      border: '2px solid #000',
+      border: '2px solid #000',  
       boxShadow: 24,
       p: 4,
     };
 
     useEffect(() => {
       handleOpen()
-    
       return () => {
       }
     }, [])
-    
 
     const handleChange = (e) => {
       setValue(e.target.value);
-      // console.log(e.target.value);
-      // handleOpen()
       handleFeatureType(e.target.value)
     };
     const httpClientIstegi=()=>{
+      handleStateModal(false)
       
     }
   return (
     <>
     {
-        isModalOpen && wkt &&(
+        isEndFeatureModalOpen && wkt &&(
           <div className=''>
               <Modal
                 open={open}

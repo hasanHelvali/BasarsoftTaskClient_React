@@ -6,26 +6,32 @@ const MyContext = createContext();
  const MyProvider = ({ children }) => {
   const [wkt, setWkt] = useState({});
   const [featureType, setFeatureType] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false);
+  const [isAuth, setisAuth] = useState(false)
   // Veri yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
     setWkt(_wkt);
-    setIsModalOpen(true); // Modal'ı aç
-    console.log(_wkt);
+    setIsEndFeatureModalOpen(true); // Modal'ı aç
+    // console.log(_wkt);
   };
   // Modal'ı kapatma işlemi
   const handleStateModal = (value) => {
-    console.log(value);
-    setIsModalOpen(value);
+    // console.log(value);
+    setIsEndFeatureModalOpen(value);
   };
 
   const handleFeatureType=(value)=>{
-    console.log(value);
+    // console.log(value);
     setFeatureType(value);
   }
 
+  const handleIsAuth=(value)=>{
+    console.log(value);
+    setisAuth(value) 
+  }
+
   return (
-    <MyContext.Provider value={{ wkt, handleDataCapture,isModalOpen,handleStateModal,featureType,handleFeatureType}}>
+    <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth}}>
       {children}
     </MyContext.Provider>
   );
