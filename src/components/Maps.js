@@ -14,6 +14,9 @@ import GeoLocation from '../models/GeoLocation';
 import EndFeatureModal from './EndFeatureModal';
 import {  MyProvider,useMyContext } from '../context/DataContext';
 import { geometryToWkt } from '../services/geometry-wkt-convert.service';
+import { useJwt } from "react-jwt";
+import { useNavigate } from 'react-router-dom';
+
 let map;
 let vectorLayer;
 let drawInteraction;
@@ -90,7 +93,7 @@ let _data;
 const Maps = () => {//map component baslangıcı
   // const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false)
   const {isEndFeatureModalOpen,handleStateModal } = useMyContext();
-  console.log(isEndFeatureModalOpen);
+  const navigate = useNavigate();
   function addFeature(value) {
     clearFeature()
     if(value==="") {
@@ -167,12 +170,13 @@ const Maps = () => {//map component baslangıcı
   function _featureType(value){
     console.log(value);
   }
-  const { wkt ,handleDataCapture} = useMyContext()
+  const { wkt ,handleDataCapture,handleLoading,laoding} = useMyContext()
   const [selectedValue, setSelectedValue] = useState('');
   type=selectedValue
     //secilen selectbox degeri icin bir state tutuyorum. Baslangıcta bos degerde.
     
   useEffect(() => {//onInit in muadili bir yapı devrededir.
+    handleLoading(false)
     map = new Map({//global degiskene yeni bir map nesnesi atandı.
       target: mapRef.current,
       layers: [
@@ -186,6 +190,8 @@ const Maps = () => {//map component baslangıcı
       })
     });
     addLayer();//layer eklendi
+
+
     return () => map//ilgili map nesnesi geri donduruluyor.
   }, []);
 
@@ -197,6 +203,11 @@ const Maps = () => {//map component baslangıcı
       addFeature(value)
     };
     const mapRef = useRef(null);
+    
+    const logOut = () => {
+      localStorage.removeItem('token');
+      navigate("/login-register")
+    };
     return <>
           <div className="map" ref={mapRef} />
           {/* 
@@ -208,6 +219,9 @@ const Maps = () => {//map component baslangıcı
           
           {/* {isEndFeatureModalOpen && <EndFeatureModal onClose={handleCloseModal} />} */}
           {isEndFeatureModalOpen ===true? <EndFeatureModal  />:""}
+
+          <button className='btn btn-danger' id='typeButton6' onClick={logOut}>Çıkış</button>
+
     </>
   };
   

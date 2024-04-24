@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react'
 import getApiUrl, { sendRequest } from '../services/httpClient.service';
 import { SignUpDTO } from '../models/Signup';
 import { Login } from '../models/Login';
+import { useMyContext } from '../context/DataContext';
+import { login } from '../services/Auth.service';
+import { Navigate } from 'react-router-dom';
 function LoginAndRegister() {
+    const {handleJWT,loading,handleLoading} = useMyContext()
     const [isLogin, setisLogin] = useState(false)
     const [formDataRegister, setFormDataRegister] = useState({
         firstName: '',
@@ -21,6 +25,10 @@ function LoginAndRegister() {
         console.log(isLogin);
     }
     useEffect(() => {
+        handleLoading(true)
+        setTimeout(() => {
+        handleLoading(false)
+        }, 500);
       }, [isLogin]);
 
       const handleChange = (event) => {
@@ -40,6 +48,7 @@ function LoginAndRegister() {
       };
 
       const createAccount = (event) => {
+        handleLoading(true)//spinner show
         event.preventDefault(); // Formun otomatik gönderilmesini engeller
         const { firstName,  username, password } = formDataRegister;
         // Burada kullanıcıyı kaydetmek için yapılacak işlemleri yazabilirsiniz
@@ -54,36 +63,62 @@ function LoginAndRegister() {
              if(_result===false){
                 alert("İlgili Kayıt Zaten Mevcut!!!")
                 setisLogin(false);
+                handleLoading(false)//spinner hide
                 return 
              }
              else{
                 alert("Kayıt Başarılı... Giriş Paneline Yönlendiriliyorsunuz... ")
                 setisLogin(true);
+                handleLoading(false)//spinner hide
              }
          })).catch((err)=>{
             alert(err)
+            handleLoading(false)//spinner hide
          })
 
 
       };
       const loginStart=(event)=>{
+        handleLoading(true)//spinner hide
+        console.log("------");
         event.preventDefault(); 
         const { username, password } = formDataLogin;
         console.log({username,password});
         const requestBody=new Login(username,password);
-        sendRequest(getApiUrl(),"AuthManagement","LoginUser",'POST',null,requestBody).then((_result=>{
+        // sendRequest(getApiUrl(),"AuthManagement","LoginUser",'POST',null,requestBody).then((_result=>{
+        //     console.log(_result)
+        //     if(_result===null || _result===undefined){
+        //         alert("Bir sorun oluştu")
+        //        return 
+        //     }
+        //     else{
+        //         console.log(_result.accessToken);
+        //         handleJWT(_result.accessToken);
+        //         localStorage.setItem("token", _result.accessToken); 
+        //     }
+        // })).catch((err)=>{
+        //    alert(err)
+        // })
+        login('POST',requestBody).then((_result=>{ //jwt icin istek yapılıyor
             console.log(_result)
             if(_result===null || _result===undefined){
                 alert("Bir sorun oluştu")
+                handleLoading(false)//spinner hide
                return 
             }
             else{
-                console.log(_result);
-                debugger
+                console.log(_result.accessToken);
+                handleJWT(_result.accessToken);
+                localStorage.setItem("token", _result.accessToken); 
+                handleJWT(_result.accessToken)
+                handleLoading(false)//spinner hide
             }
         })).catch((err)=>{
-           alert(err)
-        })
+               alert(err)
+               handleJWT("");
+            //    localStorage.setItem("token", ""); 
+                  handleLoading(false)//spinner hide
+            })
       }
 
 

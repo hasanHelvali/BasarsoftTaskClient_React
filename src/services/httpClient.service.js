@@ -2,9 +2,12 @@
 import { useState } from 'react';
 import { BeatLoader } from 'react-spinners';
 import Spinner from '../components/Spinner';
+import VerifyToken from './Auth.service';
 // Spinner bileşeninizi import edin// Basit bir HTTP isteği gönderen fonksiyon
 export function sendRequest(baseUrl,controller,action, method,jwtData,bodyData) {
-    
+  const jwt = localStorage.getItem('Token')
+  const isVerify = VerifyToken(jwt)
+  if(isVerify){
     console.log(bodyData);
     // fetch API'sini kullanarak isteği gönderme
     const options = {
@@ -23,7 +26,7 @@ export function sendRequest(baseUrl,controller,action, method,jwtData,bodyData) 
           throw new Error('Istek basarısız oldu!');
         }
         return response.json()
-
+  
       })
     //   .then(data => {
     //     // İşlenmiş veri
@@ -36,6 +39,12 @@ export function sendRequest(baseUrl,controller,action, method,jwtData,bodyData) 
         throw error; // Hata durumunu ileterek işlemi durdur
         alert("Istek Sırasında Hata Oluştu.");
       });
+  }
+  else{
+    localStorage.setItem('Token',"")//token gecersiz ise local storage bosaltılır.
+
+  }
+    
   }
   
   // Örnek kullanım
@@ -51,6 +60,9 @@ export function sendRequest(baseUrl,controller,action, method,jwtData,bodyData) 
 //       // Hata durumunda yapılacak işlemler
 //       console.error('İşlem sırasında hata:', error);
 //     });
+
+
+
 
 
 const getApiUrl = () => {

@@ -10,3 +10,23 @@ body {
   bottom: 0;
   width: 100%;
 }
+
+
+#spinner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* Arkaplan rengi ve opaklığı */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998; /* Spinner'ın arkasında olacak şekilde z-index değeri */
+}
+
+#spinner {
+  /* Spinner'ı önceki gibi konumlandırıyoruz */
+  position: relative;
+  z-index: 9999; /* Spinner'ı en üstte göstermek için z-index değeri */
+}

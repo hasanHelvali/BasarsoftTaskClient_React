@@ -8,6 +8,9 @@ const MyContext = createContext();
   const [featureType, setFeatureType] = useState("");
   const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false);
   const [isAuth, setisAuth] = useState(false)
+  const [jwt, setJwt] = useState("");
+  const [loading, setloading] = useState(true)
+
   // Veri yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
     setWkt(_wkt);
@@ -29,9 +32,18 @@ const MyContext = createContext();
     console.log(value);
     setisAuth(value) 
   }
+  const handleJWT=(value)=>{
+    setJwt(value);
+    console.log(value);
+    console.log(jwt);
+  }
+  const handleLoading=(value)=>{
+    setloading(value);
+  }
 
   return (
-    <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth}}>
+    <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth
+    ,jwt,handleJWT,loading,handleLoading}}>
       {children}
     </MyContext.Provider>
   );
