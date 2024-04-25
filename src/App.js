@@ -8,33 +8,34 @@ import { css } from '@emotion/react';
 import { useNavigate } from 'react-router-dom';
 import Spinner from './components/Spinner';
 import { RingLoader } from 'react-spinners';
+import VerifyToken from './services/Auth.service';
 function App() {
   const navigate = useNavigate();
   // const [isAuth, setisAuth] = useState(false)
-  const {isAuth,handleIsAuth,jwt,loading} = useMyContext() 
+  const {isAuth,handleIsAuth,jwt,loading,handleLoading,Verify,} = useMyContext() 
   const [_jwt, set_jwt] = useState("") 
   // const [jwt, setjwt] = useState()
 
-  useEffect(() => {
+  useEffect( () => {
     const fetchJwt = async () => {
       const jwt = await localStorage.getItem("token");
-      console.log(jwt);
       set_jwt(jwt);
-      console.log(_jwt);
-      if(jwt){
-        navigate('/maps');
+      if(jwt){//bir jwt varsa
+        handleLoading(true)
+          VerifyToken().then((result)=>{
+
+            if (result===true) {
+              navigate('/maps');
+            }
+            else{
+              navigate('/login-register');
+              localStorage.removeItem("token")
+            }
+            handleLoading(false)
+         })
       }
     };
-    // setjwt(localStorage.getItem("token"))  
-    // const jwt=localStorage.getItem("token")
-    // set_jwt(jwt)
     fetchJwt();  
-    // if (_jwt) {
-    //    <Navigate to="/maps" />;
-    // }
-    // else{
-    //    <Navigate to="/login-register" />;
-    // }
   },[jwt])
 
 

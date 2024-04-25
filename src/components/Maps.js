@@ -16,13 +16,16 @@ import {  MyProvider,useMyContext } from '../context/DataContext';
 import { geometryToWkt } from '../services/geometry-wkt-convert.service';
 import { useJwt } from "react-jwt";
 import { useNavigate } from 'react-router-dom';
-
+import GeometryListModal from './GeometryListModal';
+import { UpdateLocation } from '../models/UpdateLocation';
+import WKT from 'ol/format/WKT';
 let map;
 let vectorLayer;
 let drawInteraction;
 let type;
 // let isEndFeatureModalOpen=false;
 let _data;
+let snap;
 
 // function addLayer() {
 //   vectorLayer = new VectorLayer({
@@ -94,6 +97,7 @@ const Maps = () => {//map component baslangıcı
   // const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false)
   const {isEndFeatureModalOpen,handleStateModal } = useMyContext();
   const navigate = useNavigate();
+  const [showFeature, setShowFeature] = useState(null)
   function addFeature(value) {
     clearFeature()
     if(value==="") {
@@ -172,6 +176,8 @@ const Maps = () => {//map component baslangıcı
   }
   const { wkt ,handleDataCapture,handleLoading,laoding} = useMyContext()
   const [selectedValue, setSelectedValue] = useState('');
+  const [isGeometryListModalOpen, setIsGeometryListModalOpen] = useState(false)
+  const [isFeatureChanged, setisFeatureChanged] = useState(false)
   type=selectedValue
     //secilen selectbox degeri icin bir state tutuyorum. Baslangıcta bos degerde.
     
@@ -208,6 +214,75 @@ const Maps = () => {//map component baslangıcı
       localStorage.removeItem('token');
       navigate("/login-register")
     };
+
+    const openGeometryListModal=()=>{
+      setIsGeometryListModalOpen(true)
+    }
+    const handleClose=()=>{
+      setIsGeometryListModalOpen(false)
+    }
+    const handleGetLocation=(item)=>{
+      console.log(item);
+    }
+    const setShowFeatureFunc=(value)=>{//openlayers icin en onemli fonksiyon
+      setShowFeature(value);
+      console.log(value);
+      //id dahil butun veri burada
+      
+      setIsGeometryListModalOpen(false)
+      var geoLoc=new UpdateLocation();
+      geoLoc.id=value.id;
+      geoLoc.name=value.name;
+      geoLoc.type=value.type;
+      geoLoc.wkt=value.wkt
+      
+      //-----------wkt to map feature aşaması------------------
+      vectorLayer.getSource().clear();//layer temizlendi
+      var format=new WKT();
+      const feature = format.readFeature(geoLoc.wkt,{
+        dataProjection:'EPSG:4326',
+        featureProjection: 'EPSG:3857'
+      })
+      const source =vectorLayer.getSource();
+      source.addFeature(feature);
+      map.getView().fit(feature.getGeometry() ,{padding:[40,40,40,40],duration:1000})    
+
+      //-------------------feature modify asaması------------
+      const modify = new Modify({source: source});
+      map.addInteraction(modify);
+      snap = new Snap({source: source});
+      map.addInteraction(snap);
+      //Feature da degisiklik yapılmasına olanak saglayan yapılar bunlardır.
+      modify.on('modifystart', () => {
+        // setisFeatureChanged(true);//update modalı acacak olan butonun aktiflestirilmesi
+        // feature.modified = true; // Özelliği güncelleme
+      });
+      modify.on('modifyend', () => {
+        setisFeatureChanged(true);//update modalı acacak olan butonun aktiflestirilmesi
+        // this.generalDataService.featureUpdate.next(true);
+        // this.isFeatureChanged=true
+        var geometry = feature.getGeometry();
+        const data = {
+          type: geometry.getType(),
+          coordinates: geometry.getCoordinates(),
+        };//guncellenen yapı
+        console.log(data);
+        // this.generalDataService.updatedLocation=data;
+        // _data.type=data.type;
+        // _data.coordinates=data.coordinates;
+        //Elde edilen son geometri verisini wkt ye tekrardan cast etmem gerek
+        // _data.wkt=this.generalDataService.updateGeometryToWkt(feature);
+        // this.generalDataService.featureUpdateGeneralData.next(_data);
+  
+        // Değişiklikler tamamlandı
+        console.log(feature);
+      });
+    }
+
+    const changedFeatureSave=()=>{
+      //Burada degistiirilen koordinatlar alınacak ve bir modal a basılacak. Modalın komponent i olusturuldu. 
+      //daha sonra guncellenen yeni deger api ye gonderilecek.
+    }
     return <>
           <div className="map" ref={mapRef} />
           {/* 
@@ -219,9 +294,12 @@ const Maps = () => {//map component baslangıcı
           
           {/* {isEndFeatureModalOpen && <EndFeatureModal onClose={handleCloseModal} />} */}
           {isEndFeatureModalOpen ===true? <EndFeatureModal  />:""}
-
+          {isGeometryListModalOpen===true? <GeometryListModal isGeometryListModalOpen={isGeometryListModalOpen} handleClose={handleClose} showFeature={setShowFeatureFunc}/>:""}
           <button className='btn btn-danger' id='typeButton6' onClick={logOut}>Çıkış</button>
-
+          <button className='btn btn-danger' id='typeButton6' onClick={logOut}>Çıkış</button>
+          <button id="typeButton" class="btn btn-danger" onClick={openGeometryListModal}    style={{"background-color": "#fff", "color": "black"}}>Tüm Kayıtlar</button>
+          {/* {showFeature!==null? console.log(showFeature):""} */}
+          {isFeatureChanged===true? <button className='btn btn-danger' id='typeButton2' onClick={changedFeatureSave} >Değişiklikleri Onayla</button>:""}
     </>
   };
   

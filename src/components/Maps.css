@@ -33,10 +33,44 @@
     border-radius: 20px;
   }
 
-  #typeButton6{
+  #typeButton{
+    position: absolute;
+    top: 50px;
+    width: 8rem;
+    right: 3px; 
+    z-index: 1;
+  }
+  #typeButton2{
     position: absolute;
     top: 300px;
     width: 8rem;
     right: 3px; 
     z-index: 1;
   }
+  #typeButton6{
+    position: absolute;
+    top: 400px;
+    width: 8rem;
+    right: 3px; 
+    z-index: 1;
+  }
+
+  td {
+    border: 1px solid #ddd; /* Hücre sınırlarını belirt */
+    padding: 8px; /* Hücre içeriğinden kenarlara boşluk ekler */
+    max-width: 200px; /* Hücrenin maksimum genişliğini belirler */
+    overflow: hidden; /* İçeriğin taşması durumunda gizler */
+    text-overflow: ellipsis; /* İçeriğin taşması durumunda üç nokta (...) ekler */
+    white-space: nowrap; /* İçeriğin satır atlamamasını sağlar */
+  }
+  .modalList{
+    z-index: 2;
+}
+.modal-body {
+    overflow-y: auto; 
+    /* or overflow-y: scroll; */
+    /* overflow: auto; or overflow-y: scroll; */
+  }
+.icon{
+  cursor: pointer;
+}

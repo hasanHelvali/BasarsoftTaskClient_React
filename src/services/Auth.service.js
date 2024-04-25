@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 
 function VerifyToken() {
     return new Promise((resolve, reject) => {
@@ -6,12 +7,14 @@ function VerifyToken() {
         fetch('https://localhost:7295/api/AuthManagement/VerifyToken',{
             method: 'GET',
             headers: {
+              'content-type':'application/json',
               'Authorization': `Bearer ${jwt}`
             }
         })
             .then(response => {
                 if (response.ok) {
                     resolve(true); // Token doğrulandı
+
                 } else {
                     resolve(false); // Token doğrulanamadı
                 }

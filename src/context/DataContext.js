@@ -10,21 +10,19 @@ const MyContext = createContext();
   const [isAuth, setisAuth] = useState(false)
   const [jwt, setJwt] = useState("");
   const [loading, setloading] = useState(true)
+  // const [Verify, setVerify] = useState(false)
 
   // Veri yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
     setWkt(_wkt);
     setIsEndFeatureModalOpen(true); // Modal'ı aç
-    // console.log(_wkt);
   };
   // Modal'ı kapatma işlemi
   const handleStateModal = (value) => {
-    // console.log(value);
     setIsEndFeatureModalOpen(value);
   };
 
   const handleFeatureType=(value)=>{
-    // console.log(value);
     setFeatureType(value);
   }
 
@@ -41,6 +39,10 @@ const MyContext = createContext();
     setloading(value);
   }
 
+  // const handleIsVerify=(value)=>{
+  //   setVerify(value);
+  // ,Verify,handleIsVerify
+  // }
   return (
     <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth
     ,jwt,handleJWT,loading,handleLoading}}>
