@@ -5,6 +5,8 @@
     type;
     coordinates;
     wkt;
+    userId;
+    userName;
 }
 
 // export interface IUpdateGeoLocation {

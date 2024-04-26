@@ -34,6 +34,9 @@ function App() {
             handleLoading(false)
          })
       }
+      else{
+        navigate('/login-register');
+      }
     };
     fetchJwt();  
   },[jwt])
