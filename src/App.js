@@ -9,10 +9,11 @@ import { useNavigate } from 'react-router-dom';
 import Spinner from './components/Spinner';
 import { RingLoader } from 'react-spinners';
 import VerifyToken from './services/Auth.service';
+import JWTDecode from './services/jwt.service';
 function App() {
   const navigate = useNavigate();
   // const [isAuth, setisAuth] = useState(false)
-  const {isAuth,handleIsAuth,jwt,loading,handleLoading,Verify,} = useMyContext() 
+  const {isAuth,handleIsAuth,jwt,loading,handleLoading,Verify,role,handleRole,handleName,handleIdentifier,name,indentifier} = useMyContext() 
   const [_jwt, set_jwt] = useState("") 
   // const [jwt, setjwt] = useState()
 
@@ -23,7 +24,9 @@ function App() {
       if(jwt){//bir jwt varsa
         handleLoading(true)
           VerifyToken().then((result)=>{
-
+            
+            JWTDecode(handleRole,handleName,handleIdentifier).then(()=>{})
+            
             if (result===true) {
               navigate('/maps');
             }

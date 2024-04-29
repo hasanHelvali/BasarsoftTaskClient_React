@@ -3,9 +3,10 @@ import { sendRequest } from '../services/httpClient.service';
 import { useMyContext } from '../context/DataContext';
 import { Dialog } from '@mui/material';
 import { Modal,Button } from 'react-bootstrap';
-function AllFeatureModal({handleClose}) {
+function AllFeatureModal({handleClose,handleIsOpenAllFeatureModal,handleSelectedFeatureMap}) {
     const [allFeature, setallFeature] = useState([])
-    const {laoding,handleLoading}=useMyContext()
+    const [isOpen, setIsOpen] = useState(false)
+    const {laoding,handleLoading,role,username,identifier}=useMyContext()
     useEffect(() => {
         handleLoading(true);
         sendRequest("maps","","GET").then((data)=>{
@@ -17,14 +18,18 @@ function AllFeatureModal({handleClose}) {
             handleLoading(false);
         })
     },[]) 
+    handleIsOpenAllFeatureModal=()=>{
+        setIsOpen(true)
+    }
     function handleSelectedFeature(e){
         console.log(e);
         //burada ilgiliveri alındı. Simdi bunu haritada gostermek gerekiyor.
-        
+        handleClose();
+        handleSelectedFeatureMap(e)
     }
   return (
     <>
-        <Modal show={allFeature.length>0} style={{zIndex:"5000"}}>
+        <Modal show={allFeature.length>0 } style={{zIndex:"5000"}}>
             <Modal.Header>
                 <Modal.Title>Kayıtlar</Modal.Title>
             </Modal.Header>

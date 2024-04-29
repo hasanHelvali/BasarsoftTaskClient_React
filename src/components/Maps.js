@@ -5,7 +5,7 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import './Maps.css'
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import SelectForm from './SelectForm';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
@@ -21,6 +21,12 @@ import { UpdateLocation } from '../models/UpdateLocation';
 import WKT from 'ol/format/WKT';
 import UpdateModal from './UpdateModal';
 import AllFeatureModal from './AllFeatureModal';
+import { Overlay } from 'ol';
+import { InteractionAuth } from '../models/InteractionAuth';
+import StartInteraction from './StartInteraction';
+import { sendRequest } from '../services/httpClient.service';
+import { toStringHDMS } from 'ol/coordinate';
+import { CustomIntersection } from '../models/Interaction';
 let map;
 let vectorLayer;
 let drawInteraction;
@@ -28,7 +34,9 @@ let type;
 // let isEndFeatureModalOpen=false;
 let _data;
 let snap;
-
+let overlay
+let interaction;
+// let intersec;
 // function addLayer() {
 //   vectorLayer = new VectorLayer({
 //     source: new VectorSource(),
@@ -95,14 +103,33 @@ let snap;
 //     // Burada ilgili service yapısına datalar gonderildigi anda ilgili coordinates modalı acılır.
 //   });
 // }
-const Maps = () => {//map component baslangıcı
+const Maps = ({handleSelectedFeatureMap,handleCloseInteraction}) => {//map component baslangıcı
   // const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false)
-  const {isEndFeatureModalOpen,handleStateModal } = useMyContext();
+  const {isEndFeatureModalOpen,handleStateModal ,role,username,identifier} = useMyContext();
   const navigate = useNavigate();
   const [showFeature, setShowFeature] = useState(null)
   const [isAllFeatureButtonActive, setisAllFeatureButtonActive] = useState(true)
   const [isOpenAllFeatureModel, setisOpenAllFeatureModel] = useState(false)
   const [allFeature, setallFeature] = useState([])
+  const [selectedPrimeModalFeature, setSelectedPrimeModalFeature] = useState()
+  const [isStartInteractionButtonDisable,setIsStartInteractionButtonDisable]=useState(false)
+  const [intersec, setintersec] = useState()
+  
+
+  handleSelectedFeatureMap=(value)=>{
+    // setSelectedPrimeModalFeature(value)
+    console.log(value);
+    vectorLayer.getSource().clear();
+    var format=new WKT();
+    const feature = format.readFeature(value.wkt,{
+      dataProjection:'EPSG:4326',
+      featureProjection: 'EPSG:3857'
+    })
+    const source =vectorLayer.getSource();
+    source.addFeature(feature);
+    map.getView().fit(feature.getGeometry(),{padding:[40,40,40,40],duration:1000})    
+  }
+
   function addFeature(value) {
     clearFeature()
     if(value==="") {
@@ -205,7 +232,23 @@ const Maps = () => {//map component baslangıcı
     });
     addLayer();//layer eklendi
 
-
+    overlay = new Overlay({
+      element: document.getElementById('popup'),
+      autoPan: {
+        animation:{
+          duration:250
+        }
+      },
+    });
+    // overlay = new Overlay({
+    //   element: container,
+    //   autoPan: {
+    //     animation: {
+    //       duration: 250,
+    //     },
+    //   },
+    // });
+    map.addOverlay(overlay)
     return () => map//ilgili map nesnesi geri donduruluyor.
   }, []);
 
@@ -307,6 +350,97 @@ const Maps = () => {//map component baslangıcı
     const handleCloseAllFeatureModal=()=>{
       setisOpenAllFeatureModel(false)
     }
+    const handleInteractionButton=(value)=>{
+      setIsStartInteractionButtonDisable(true);
+      handleStartInteraction();
+      
+
+    }
+    const handleStartInteraction=()=>{
+      vectorLayer.getSource().clear();
+      var tooltipElement = document.getElementById('tooltip');//tooltip oegsi yakalandı
+      var tooltipOverlay =tooltipElement;//overlay i temsilen bir nesneye verildi.
+
+      const drawInteraction = new Draw({
+        type: "Point", // Çizilebilecek şekil türünü (Point, LineString, Polygon) seciyorum
+      });//point olusuturukldu
+      map.addInteraction(drawInteraction);//Point seklindeki interaction haritaya eklendi.
+      
+      drawInteraction.on('drawstart', function (event) {
+        
+      })
+      drawInteraction.on('drawend', function (event) {
+        handleLoading(true)
+        var feature = event.feature;
+        var geometry = feature.getGeometry();
+        var coordinates= geometry.getCoordinates();//Buradaki coordinates i 
+        console.log(coordinates);
+        let container = document.getElementById('popup');
+        overlay = new Overlay({
+        element: container,
+        autoPan: {
+          animation: {
+            duration: 250,
+          },
+        },
+      });
+        if( overlay.getElement()){
+          overlay.setPosition(coordinates)
+          console.log("setposiiton var");
+        }
+        const _type = event.feature
+        .getGeometry()
+        .getType();
+
+        var geometry = feature.getGeometry();
+
+        var format = new WKT();
+        const _locWkt = format.writeGeometry(feature.getGeometry(), {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+        });
+
+        var interactAuth=new InteractionAuth();
+        interactAuth.pointWKT=_locWkt
+        interactAuth.role=role;
+        interactAuth.id=identifier;
+        console.log(interactAuth);
+
+        sendRequest("maps","InteractionExists","POST",interactAuth).then((result)=>{
+          console.log(result);
+          handleLoading(true);
+          if(result===null){
+            //bir kesisim bulunamadı
+            vectorLayer.getSource().clear()
+            handleLoading(false);
+            return;
+          }
+          interaction=result;
+   
+          const hdms = toStringHDMS(toLonLat(coordinates));
+          let intersection=new CustomIntersection();
+          intersection.hdsm=hdms;
+          intersection.name=result.name;
+          //model intersection yayınlanacak
+          if (overlay) {
+            overlay.setPosition(coordinates);
+          }
+          vectorLayer.getSource().addFeature(feature);
+          handleLoading(false)
+          setintersec(intersection);
+          return;
+        }).catch((err)=>{
+          console.log(err);
+          alert("Kesisim veya Yetki Yok")
+          handleLoading(false)
+          overlay.setPosition(undefined)
+          //model intersection yayınlanacak
+          vectorLayer.getSource().clear()
+          //intersection i kapat
+          //closeTooltip
+        })
+      })
+    }
 
 
     return <>
@@ -322,12 +456,14 @@ const Maps = () => {//map component baslangıcı
           {isEndFeatureModalOpen ===true? <EndFeatureModal  />:""}
           {isGeometryListModalOpen===true? <GeometryListModal isGeometryListModalOpen={isGeometryListModalOpen} handleClose={handleClose} showFeature={setShowFeatureFunc}/>:""}
           {isOpenupdatedFeatureModal===true?<UpdateModal feature={updatedFeature}  handleClose={handleUpdateModalClose}/>:""}
-          {isOpenAllFeatureModel===true?<AllFeatureModal  handleClose={handleCloseAllFeatureModal}/>:""}
+          {isOpenAllFeatureModel===true?<AllFeatureModal  handleClose={handleCloseAllFeatureModal} handleSelectedFeatureMap={handleSelectedFeatureMap}/>:""}
+          {isStartInteractionButtonDisable===true? <StartInteraction intersec={intersec}/>:""}
           <button className='btn btn-danger' id='typeButton6' onClick={logOut}>Çıkış</button>
           <button id="typeButton" className="btn btn-danger" onClick={openGeometryListModal}    style={{"background-color": "#fff", "color": "black"}}>Tüm Kayıtlar</button>
           {isAllFeatureButtonActive===true? <button className='btn btn-danger' id='typeButton3' onClick={handleOpenAllFeatureModal} >Tüm Kayıtları Getir</button>:""}
           {/* {showFeature!==null? console.log(showFeature):""} */}
           {isFeatureChanged===true? <button className='btn btn-danger' id='typeButton2' onClick={changedFeatureSave} >Değişiklikleri Onayla</button>:""}
+          {<button className='btn btn-danger' id='typeButton4' onClick={handleInteractionButton} disabled={isStartInteractionButtonDisable}  >Start Intersection</button>}
     </>
   };
   export default Maps;

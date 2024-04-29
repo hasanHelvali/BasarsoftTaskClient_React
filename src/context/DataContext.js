@@ -11,6 +11,9 @@ const MyContext = createContext();
   const [jwt, setJwt] = useState("");
   const [loading, setloading] = useState(true)
   // const [Verify, setVerify] = useState(false)
+  const [role, setrole] = useState("User")
+  const [username, setusername] = useState("")
+  const [identifier, setIdentifier] = useState("")
 
   // Veri yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
@@ -43,9 +46,19 @@ const MyContext = createContext();
   //   setVerify(value);
   // ,Verify,handleIsVerify
   // }
+
+  const handleRole=(value)=>{
+    setrole(value)
+  }
+  const handleName=(value)=>{
+    setusername(value)
+  }
+  const handleIdentifier=(value)=>{
+    setIdentifier(value)
+  }
   return (
     <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth
-    ,jwt,handleJWT,loading,handleLoading}}>
+    ,jwt,handleJWT,loading,handleLoading,role,handleRole,username, handleName,identifier,handleIdentifier}}>
       {children}
     </MyContext.Provider>
   );
