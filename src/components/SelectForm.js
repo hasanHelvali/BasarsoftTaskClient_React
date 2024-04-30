@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useMyContext } from '../context/DataContext';
-function SelectForm({ onSelectChange }) {
+function SelectForm({ onSelectChange , disable }) {
     //OnSelectChange adında bir state i props olarak parent component e geciyorum.
     const [selectedValue, setSelectedValue] = useState('');//secilen selectbox degeri icin bir state tutuyorum.
     const { featureType,handleFeatureType,isEndFeatureModalOpen,handleStateModal} = useMyContext();
     useEffect(() => {
         // select kutusunun featureType her degistiginde  güncelle
-      }, [featureType]);
+      }, [featureType,disable]);
     const handleSelectChange = (event) => {
         setSelectedValue(event.target.value);
         //secilen degere gore ilgili state i set liyorum.
@@ -17,9 +17,10 @@ function SelectForm({ onSelectChange }) {
       };
   return (
     <>
+        {
         <form className="form">
             <div className="">
-            <select id="type" className="form-select" onChange={handleSelectChange}  value={featureType}>
+            <select disabled={disable} id="type" className="form-select" onChange={handleSelectChange}  value={featureType}>
                 {/* selectbox degistiginde handleSelectChange adında bir fonksiyonu tetikliyorum. Ayrıca selectbox ın icerigi context teki 
                 featureType a baglı.*/}
                 <option value="">-- Seçiniz --</option>
@@ -30,6 +31,7 @@ function SelectForm({ onSelectChange }) {
             </select>
             </div>
         </form>
+        } 
     </>
   )
 }

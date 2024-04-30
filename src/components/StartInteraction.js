@@ -13,16 +13,18 @@ useEffect(() => {
     
   return (
     <>
-    {  intersec?  
-        <div id="popup" className="ol-popup z-3 " >
-            <a id="popup-closer" className="ol-popup-closer" style={{"cursor":" pointer"}} onClick={()=>handleCloseInteraction}></a>
-            <div id="popup-content">
-                {/* <span *ngIf="customIntersec.name && customIntersec.hdms">{{customIntersec.name}} {{customIntersec.hdms}}</span> */}
-                <span >{intersec?.name} {intersec?.hdms}</span>
-            </div> 
-        </div>
+      <div id="popup" >
+    {  intersec ?
+      <div className='ol-popup z-3 '>
+              <a id="popup-closer" className="ol-popup-closer" style={{"cursor":" pointer" ,"zIndex":"10000000000000000"}} onClick={handleCloseInteraction}></a>
+              <div id="popup-content">
+                  {/* <span *ngIf="customIntersec.name && customIntersec.hdms">{{customIntersec.name}} {{customIntersec.hdms}}</span> */}
+                  <span >{intersec?.name} <br/> {intersec?.hdsm}</span>
+              </div> 
+      </div>  
        :""
-    }
+      }
+      </div>
 
     </>
     /*Buradaki  */

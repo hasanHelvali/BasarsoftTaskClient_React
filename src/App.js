@@ -10,6 +10,8 @@ import Spinner from './components/Spinner';
 import { RingLoader } from 'react-spinners';
 import VerifyToken from './services/Auth.service';
 import JWTDecode from './services/jwt.service';
+import Admin from './components/Admin/Admin';
+import StartInteraction from './components/StartInteraction';
 function App() {
   const navigate = useNavigate();
   // const [isAuth, setisAuth] = useState(false)
@@ -47,6 +49,7 @@ function App() {
 
   return (
       <div className="App">
+        {/* <StartInteraction /> */}
         {loading?(
           <div id="spinner-container">
           <RingLoader
@@ -71,6 +74,7 @@ function App() {
            <Routes>
               <Route path="/login-register" element={<LoginAndRegister/>} />
               <Route path="/maps" element={_jwt?< Maps/>:<Navigate to="/login-register" />}  />
+              <Route path="/admin" element={_jwt?< Admin/>:<Navigate to="/admin" />}  />
             </Routes>
       </div>
   );
