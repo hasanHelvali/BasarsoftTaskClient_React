@@ -10,8 +10,11 @@ import Spinner from './components/Spinner';
 import { RingLoader } from 'react-spinners';
 import VerifyToken from './services/Auth.service';
 import JWTDecode from './services/jwt.service';
-import Admin from './components/Admin/Admin';
+import Admin, { AdminRoutes } from './components/Admin/Admin';
 import StartInteraction from './components/StartInteraction';
+import AllUsers from './components/Admin/AllUsers';
+import Roles from './components/Admin/Roles';
+import GeographyAuthority from './components/Admin/GeographyAuthority';
 function App() {
   const navigate = useNavigate();
   // const [isAuth, setisAuth] = useState(false)
@@ -74,10 +77,28 @@ function App() {
            <Routes>
               <Route path="/login-register" element={<LoginAndRegister/>} />
               <Route path="/maps" element={_jwt?< Maps/>:<Navigate to="/login-register" />}  />
-              <Route path="/admin" element={_jwt?< Admin/>:<Navigate to="/admin" />}  />
+              {/* <Route path="/admin" element={_jwt? */}
+                {/* < Admin> */}
+                {/* <Routes> 
+                    <Route path='/admin/users' element={<AllUsers/>}/>
+                    <Route path='/admin/roles' element={<Roles/>}/>
+                    <Route path='/admin/geoAuth' element={<GeographyAuthority/>}/>
+                  </Routes> */}
+              {/* </Admin>:<Navigate to="/login-register" />}  /> */}
+              <Route path="/admin/*" element={_jwt?
+                < AdminRoutes>
+                {/* <Routes> 
+                    <Route path='/admin/users' element={<AllUsers/>}/>
+                    <Route path='/admin/roles' element={<Roles/>}/>
+                    <Route path='/admin/geoAuth' element={<GeographyAuthority/>}/>
+                  </Routes> */}
+              </AdminRoutes>:<Navigate to="/login-register" />}  />
+              {/* <Route path="/admin/*" element={<Adminroutes />} /> */}
+
             </Routes>
       </div>
   );
 }
 
 export default App;
+

@@ -14,8 +14,8 @@ const MyContext = createContext();
   const [role, setrole] = useState("User")
   const [username, setusername] = useState("")
   const [identifier, setIdentifier] = useState("")
-
-  // Veri yakalandığında context'e set etme işlemi
+const [activeAdminPageComponentUrl, setactiveAdminPageComponentUrl] = useState()
+  //  yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
     setWkt(_wkt);
     setIsEndFeatureModalOpen(true); // Modal'ı aç
@@ -56,9 +56,12 @@ const MyContext = createContext();
   const handleIdentifier=(value)=>{
     setIdentifier(value)
   }
+  const handleActiveAdminPageComponentUrl=(value)=>{
+    setactiveAdminPageComponentUrl(value)
+  }
   return (
     <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth
-    ,jwt,handleJWT,loading,handleLoading,role,handleRole,username, handleName,identifier,handleIdentifier}}>
+    ,jwt,handleJWT,loading,handleLoading,role,handleRole,username, handleName,identifier,handleIdentifier,activeAdminPageComponentUrl,handleActiveAdminPageComponentUrl}}>
       {children}
     </MyContext.Provider>
   );
