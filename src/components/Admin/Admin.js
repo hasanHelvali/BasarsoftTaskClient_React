@@ -6,7 +6,6 @@ import "./Admin.css"
 // import AllUsers from './AllUsers';
 // import Roles from './Roles';
 // import GeographyAuthority from './GeographyAuthority';
-import Nav from './Nav';
 import SideBar from './SideBar';
 import { Route, Routes, useOutletContext } from 'react-router-dom';
 import AllUsers from './AllUsers';
@@ -14,6 +13,7 @@ import Roles from './Roles';
 import GeographyAuthority from './GeographyAuthority';
 import { Outlet } from 'react-router-dom';
 import { useMyContext } from '../../context/DataContext';
+
 function Admin() {
   const {activeAdminPageComponentUrl}=useMyContext()
   // const { outletContext } = useOutletContext();
@@ -46,7 +46,10 @@ function Admin() {
       <div className='content'>
       {/* {outletContext.outletElement}  */}
       {/* <Outlet/> */}
-      {activeAdminPageComponentUrl==="users"?<AllUsers/>:activeAdminPageComponentUrl==="roles"?<Roles/>:activeAdminPageComponentUrl==="geoAuth"?<GeographyAuthority/>:""}
+      {activeAdminPageComponentUrl==="users"?<AllUsers/>
+      :activeAdminPageComponentUrl==="roles"?<Roles/>
+      :activeAdminPageComponentUrl==="geoAuth"?<GeographyAuthority/>
+      :""}
       </div>
 
     </>
@@ -55,15 +58,15 @@ function Admin() {
 
 export default Admin
 
-export  const AdminRoutes = () => {
-  return (
-      <Routes>
-        {/* Her bir rota yapısını ilgili yollarla eşleştiriyoruz */}
-        <Route path="/" element={<Admin />} />
-        <Route element={<SideBar />} /> 
-        <Route path="/users" element={<AllUsers />} />
-        <Route path="/roles" element={<Roles></Roles>} />
-        <Route path="/geoAuth" element={<GeographyAuthority/>} />
-      </Routes>
-  );
-};
+// export  const AdminRoutes = () => {
+//   return (
+//       <Routes>
+//         {/* Her bir rota yapısını ilgili yollarla eşleştiriyoruz */}
+//         <Route element={<SideBar />} /> 
+//         <Route path="/" element={<Admin />} />
+//         <Route path="/users" element={<AllUsers />} />
+//         <Route path="/roles" element={<Roles></Roles>} />
+//         <Route path="/geoAuth" element={<GeographyAuthority/>} />
+//       </Routes>
+//   );
+// };

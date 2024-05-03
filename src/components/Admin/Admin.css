@@ -46,3 +46,9 @@ body {
     background-color: #515151
     ; /* hover durumunda arka plan rengini siyah yap */
 }
+
+
+
+.update:hover{
+    background-color: darkgray;
+}
