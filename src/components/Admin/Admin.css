@@ -52,3 +52,21 @@ body {
 .update:hover{
     background-color: darkgray;
 }
+
+
+
+.message-container {
+    position: fixed;
+    top: 20px; /* İstediğiniz yükseklik değerini ayarlayabilirsiniz */
+    right: 20px; /* İstediğiniz sağlık değerini ayarlayabilirsiniz */
+    z-index: 999999999999999999999999999999999999999999999999999999999999999999; /* Diğer içeriğin üzerinde olmasını sağlamak için z-index değeri */
+    background-color: #fff; /* Arka plan rengi */
+    padding: 10px 20px; /* İçeriğin iç kenar boşluğu */
+    border-radius: 5px; /* Kenar yuvarlaklığı */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Gölge */
+  }
+  
+  .message {
+    color: #333; /* Metin rengi */
+    font-size: 16px; /* Metin boyutu */
+  }

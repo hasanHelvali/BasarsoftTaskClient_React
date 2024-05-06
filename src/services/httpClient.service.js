@@ -4,7 +4,7 @@ import { BeatLoader } from 'react-spinners';
 import Spinner from '../components/Spinner';
 import VerifyToken from './Auth.service';
 // Spinner bileşeninizi import edin// Basit bir HTTP isteği gönderen fonksiyon
-export function sendRequest(controller,action, method,bodyData) {
+export function sendRequest(controller,action, method,bodyData,queryData) {
   const jwt = localStorage.getItem('token')
   const isVerify = VerifyToken(jwt)
   if(isVerify){
@@ -18,7 +18,8 @@ export function sendRequest(controller,action, method,bodyData) {
         },
         body:JSON.stringify(bodyData)
       };
-    return fetch(`${getApiUrl()}/${controller}/${action?action:""}`, options)
+      console.log(queryData);
+    return fetch(`${getApiUrl()}/${controller}${action?"/"+action:""}${queryData?"/"+queryData:""}`, options)
       .then(response => {
         console.log(response);
         // Yanıtın durumuna göre işlemler
@@ -46,6 +47,19 @@ export function sendRequest(controller,action, method,bodyData) {
   }
     
   }
+  export function Register(controller,action, method,bodyData){
+    localStorage.removeItem("token")
+    const options = {
+      method: method,
+      headers: {
+          'content-type':'application/json',
+        'Authorization': `Bearer ${localStorage.getItem("token")}` // Header'a token ekleniyor
+      },
+      body:JSON.stringify(bodyData)
+    };
+    return fetch(`${getApiUrl()}/${controller}/${action?action:""}`, options)
+
+  } 
   
   // Örnek kullanım
 //   const url = 'https://jsonplaceholder.typicode.com/posts/1';

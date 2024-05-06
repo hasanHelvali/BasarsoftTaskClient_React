@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import getApiUrl, { sendRequest } from '../services/httpClient.service';
+import getApiUrl, { Register, sendRequest } from '../services/httpClient.service';
 import { SignUpDTO } from '../models/Signup';
 import { Login } from '../models/Login';
 import { useMyContext } from '../context/DataContext';
@@ -58,8 +58,25 @@ function LoginAndRegister() {
 
         // sendRequest(getApiUrl(),"AuthManagement","CreateUser",'POST',null,{ "Name":firstName,  "Email":username,"Password" :password })
         const requestBody=new SignUpDTO(firstName,username,password);
-         sendRequest(getApiUrl(),"AuthManagement","CreateUser",'POST',null,requestBody).then((_result=>{
-             console.log(_result)
+        //  sendRequest(getApiUrl(),"AuthManagement","CreateUser",'POST',null,requestBody).then((_result=>{
+        //      console.log(_result)
+        //      if(_result===false){
+        //         alert("İlgili Kayıt Zaten Mevcut!!!")
+        //         setisLogin(false);
+        //         handleLoading(false)//spinner hide
+        //         return 
+        //      }
+        //      else{
+        //         alert("Kayıt Başarılı... Giriş Paneline Yönlendiriliyorsunuz... ")
+        //         setisLogin(true);
+        //         handleLoading(false)//spinner hide
+        //      }
+        //  })).catch((err)=>{
+        //     alert(err)
+        //     handleLoading(false)//spinner hide
+        //  })
+        Register("AuthManagement","CreateUser",'POST',requestBody).then((_result)=>{
+            console.log(requestBody);
              if(_result===false){
                 alert("İlgili Kayıt Zaten Mevcut!!!")
                 setisLogin(false);
@@ -71,10 +88,10 @@ function LoginAndRegister() {
                 setisLogin(true);
                 handleLoading(false)//spinner hide
              }
-         })).catch((err)=>{
+        }).catch((err)=>{
             alert(err)
             handleLoading(false)//spinner hide
-         })
+        })
 
 
       };
@@ -195,7 +212,7 @@ function LoginAndRegister() {
                                                     </a>
                                                 </div>
                                                 <h1 className="h5 mb-1">Kayıt Olun!</h1>
-                                                <p className="text-muted mb-4">Bir hesabınız yok mu, 1 dakika içinde hesabınızı oluşturun!</p>
+                                                <p className="text-muted mb-4">Bir hesabınız yok mu, hemen hesabınızı oluşturun!</p>
                                                 <form className="user" method="post" >
                                                     <div className="form-group row">
                                                         <div className="col-sm-6 mb-3 mb-sm-0">

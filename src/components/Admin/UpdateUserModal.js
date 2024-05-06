@@ -54,12 +54,14 @@ function UpdateUserModal({user,cleanUser}) {
           setmessageType("success");
           setmessageContent("Güncelleme İşlemi Başarı Ile Yapıldı...")
           setvisibleMessage(true)
+          setTimeout(()=>{setvisibleMessage(false)},3000)
         }).catch((err)=>{
           handleClose()
           handleLoading(false);
-          setmessageType("error");
+          setmessageType("danger");
           setmessageContent("Güncelleme İşlemi Sırasında Bir Hata Oluştu!!!")
           setvisibleMessage(true)
+          setTimeout(()=>{setvisibleMessage(false)},3000)
         })
       }
     return (

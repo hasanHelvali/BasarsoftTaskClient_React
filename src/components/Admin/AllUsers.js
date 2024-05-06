@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { BsPencilSquare } from "react-icons/bs";
 import { FaTrash } from "react-icons/fa";
 import UpdateUserModal from './UpdateUserModal';
-
+import $ from 'jquery'; // jQuery kütüphanesini projeye dahil edin
 function AllUsers() {
   const {handleLoading,role}=useMyContext();
   const navigate=useNavigate();
@@ -16,7 +16,8 @@ function AllUsers() {
   const [updateModalVisible, setupdateModalVisible] = useState(false)
   const [isupdate, setisupdate] = useState(false)
   const [isdelete, setisdelete] = useState(false)
-  const [user, setuser] = useState()
+  const [user, setuser] = useState();
+  const [deletedUserId, setDeletedUserId] = useState(null); // Silinen kullanıcının ID'sini saklamak için bir state
 
   useEffect(() => {
     handleLoading(true);
@@ -62,15 +63,24 @@ function AllUsers() {
   }
   const handleDeleteUser=(rowData)=>{
     //kullanıcı silinecek
-    setuser(rowData)
+    handleLoading(true);
+    sendRequest("Admin","","DELETE",null,rowData.id).then((result)=>{
+      console.log(result);
+      handleLoading(false);
+      $(`.${rowData.id}`).fadeOut(500);
+    }).catch((err)=>{
+      console.log(err);
+      handleLoading(false);
+    })
+
   }
   const cleanUser=()=>{
-    console.log("clean");
-    setuser(null)
+    // setuser(null)
+
   }
   return (
       <>
-      <DataTable  value={users} tableStyle={{ minWidth: '50rem', border:"3px solid",padding:"5px",  }} rowClassName={"border-1"}>
+      <DataTable  value={users} tableStyle={{ minWidth: '50rem', border:"3px solid",padding:"5px",  }} rowClassName={(rowData)=>`border-1 ${rowData.id}`}>
         <Column field="id" header="ID"  ></Column> 
         <Column field="name" header="Name"  ></Column>
         <Column field="email" header="Username" ></Column>
