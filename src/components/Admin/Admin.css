@@ -70,3 +70,9 @@ body {
     color: #333; /* Metin rengi */
     font-size: 16px; /* Metin boyutu */
   }
+
+
+  .textarea-container {
+    max-height: 200px; /* İstenilen yüksekliği ayarlayın */
+    overflow-y: auto; /* İçerik dolunca scroll bar göster */
+  }

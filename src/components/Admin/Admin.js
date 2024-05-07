@@ -13,8 +13,8 @@ import Roles from './Roles';
 import GeographyAuthority from './GeographyAuthority';
 import { Outlet } from 'react-router-dom';
 import { useMyContext } from '../../context/DataContext';
-
 function Admin() {
+  const [activatePage, setactivatePage] = useState("Tüm Kullanıcılar")
   const {activeAdminPageComponentUrl}=useMyContext()
   // const { outletContext } = useOutletContext();
     // function SideBar() {
@@ -37,15 +37,19 @@ function Admin() {
     //   </>
     //   )
     // }
- 
+    const handleactivatePage=(value)=>{
+      console.log(value);
+      setactivatePage(value)
+    }
     
     return (
       <>
       
-      <SideBar/>
+      <SideBar activatePage={handleactivatePage}/>
       <div className='content'>
       {/* {outletContext.outletElement}  */}
       {/* <Outlet/> */}
+      <h5 className='text-center'>{activatePage}</h5> <hr />
       {activeAdminPageComponentUrl==="users"?<AllUsers/>
       :activeAdminPageComponentUrl==="roles"?<Roles/>
       :activeAdminPageComponentUrl==="geoAuth"?<GeographyAuthority/>

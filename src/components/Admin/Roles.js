@@ -7,6 +7,8 @@ import { useMyContext } from '../../context/DataContext';
 import { sendRequest } from '../../services/httpClient.service';
 import { useNavigate } from 'react-router-dom';
 import { Users } from '../../models/User';
+// import Dropdown from 'react-bootstrap/Dropdown';
+
 function Roles() {
     const [users, setusers] = useState([])
     const [selectedRole, setselectedRole] = useState(1)
@@ -57,6 +59,7 @@ function Roles() {
         sendRequest("AuthManagement","GetAllUsers","GET").then((data)=>{
           // setusers(data);
           const updatedUsers = data.filter(user => !user.role.includes('SuperAdmin'));//superadmin kullanıclar ıcınde kendisini gormesin diye bu islem yapıldı
+          
           setusers(updatedUsers)
         handleLoading(false);
         }).catch((err)=>{
@@ -90,6 +93,7 @@ function Roles() {
             }
         }
       }
+
       const getDefaultRole = (rowData) => {//kullanıcının role degerinin dropdown da secili gelmesi icin yazılmıstır.
         return dropdownStates[rowData.id] || null;
       };
@@ -114,6 +118,9 @@ function Roles() {
 
         })
       }
+      const createHandleMenuClick=()=>{
+        
+      }
   return (
     <>
     <div className="card"  style={{" height": "90vh"}}>
@@ -126,7 +133,7 @@ function Roles() {
                 <div className="dropdown-demo">
                     <div className="card">
                         <Dropdown
-                        value={getDefaultRole(rowData)}
+                        value={dropdownStates}
                         options={roles.filter(role=>role.name!==rowData.role[0])}
                         onChange={(e) => handleChangeRole(e.value,rowData)}
                         optionValue="id"
@@ -134,6 +141,17 @@ function Roles() {
                         placeholder="Select a Role"
                         className={`w-full md:w-14rem drop${rowData.id}`}
                         />
+                            {/* <Dropdown style={}>
+                              <Dropdown.Toggle variant="success" id="dropdown-basic">
+                                Dropdown Button
+                              </Dropdown.Toggle>
+
+                              <Dropdown.Menu>
+                                {roles.map((role)=>{
+                                  return <Dropdown.Item >role</Dropdown.Item>
+                                })}
+                              </Dropdown.Menu>
+                            </Dropdown> */}
                     </div>
                     </div>
             </div> }>

@@ -2,24 +2,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMyContext } from "../../context/DataContext";
 import { useEffect, useState } from "react";
 import VerifyToken from "../../services/Auth.service";
-function SideBar() {
+function SideBar({activatePage}) {
     const {handleLoading,activeAdminPageComponentUrl,handleActiveAdminPageComponentUrl}=useMyContext()
     const navigate = useNavigate();
     const [url, seturl] = useState("")
-    
     const {role}=useMyContext()
+    // const [activatePage, setactivatePage] = useState()
     useEffect(() => {
         handleLoading(true);
         VerifyToken().then((result)=>{
             if (result===true) {
                 setTimeout(() => {
                     handleLoading(false);
+                handleComponents("users") 
                 }, 500);
             }
               else{
                 navigate('/login-register');
                 localStorage.removeItem("token")
-                handleLoading(false);    
+                handleLoading(false);   
                 return;
               }
         }).catch((err)=>{
@@ -60,11 +61,11 @@ function SideBar() {
                    Haritaya Git
                 </Link>
             </li> <br />
-            <li className="item rounded-5 border-warning "style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("users")}}>Tüm Kullanıcılar</a></li><br/>
+            <li className="item rounded-5 border-warning "style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("users");activatePage("Tüm Kullanıcılar") }}>Tüm Kullanıcılar</a></li><br/>
             {role==="SuperAdmin"?
             <div>
-                <li className="item rounded-5 border-warning " style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("roles")}} >Rol Düzenle</a></li><br/>
-                <li className="item rounded-5 border-warning "style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("geoAuth")}}>Alan-Kullanıcı İlişkisi İzinleri</a></li><br/>
+                <li className="item rounded-5 border-warning " style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("roles"); activatePage("Role Düzenle")}} >Rol Düzenle</a></li><br/>
+                <li className="item rounded-5 border-warning "style={{"cursor":"pointer"}}><a onClick={()=>{handleComponents("geoAuth");activatePage("Alan-Kullanıcı İlişkisi İzinleri")}}>Alan-Kullanıcı İlişkisi İzinleri</a></li><br/>
             </div>:""
             }
             <li className="item rounded-5 border-warning " style={{"cursor":"pointer"}}><a onClick={()=>{navigate("/login-register")}} >Çıkış</a></li><br/>
