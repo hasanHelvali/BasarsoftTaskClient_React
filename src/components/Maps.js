@@ -166,6 +166,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         "circle-fill-color": "#ffcc33",
       },
       className: "vecLay",
+      
     });
     map.addLayer(vectorLayer); //layer globvaldeki haritaya ekleniyor.
   }
@@ -214,6 +215,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       layers: [
         new TileLayer({
           source: new OSM(),
+          name:"map"
         }),
       ],
       view: new View({
@@ -238,6 +240,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   }, []);
 
   const handleSelectChange = (value) => {
+    clearImageLayer();
     setSelectedValue(value); //ilgili degeri state e alıp guncelliyorum.
     // map.removeInteraction(drawInteraction)
     // return;
@@ -253,6 +256,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   };
 
   const openGeometryListModal = () => {
+    clearImageLayer()
     setIsGeometryListModalOpen(true);
   };
   const handleClose = () => {
@@ -327,6 +331,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   };
 
   const handleOpenAllFeatureModal = () => {
+    clearImageLayer()
     setisOpenAllFeatureModel(true);
   };
   const handleCloseAllFeatureModal = () => {
@@ -457,52 +462,20 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         map.removeInteraction(interaction);
     });
   }
-  const [imageUrl, setimageUrl] = useState()
-  const handleWmslayerData=(layerData)=>{
-    // console.log(layerData);
-    // const layer = 
-    // new ImageLayer({
-    //   source: new ImageStatic({
-    //     url: `data:image/png;base64,${layerData}`,
-    //     imageExtent: [0, 0, 100, 100] // Verinin boyutlarına göre ayarlayın
-    //   })
-    // })
-    
-    // var wmsLayer = new TileLayer({
-    //   source: new TileWMS({
-    //     url: 'http://localhost:8081/geoserver/basarsoft/wms', // Geoserver URL'si
-    //     params: {
-    //       //  'FORMAT':'text/html; subtype=openlayers'
-    //        params: { 'REQUEST':'GetMap','BBOX':'437762.766104487,4376882.69760637,522118.932880649,4461344.83731443', 'LAYERS': 'basarsoft:LocsAndUsers', 'TILED': true  ,'SRS':'EPSG:4326','FORMAT':'application/openlayers','WİDTH':'767','HEİGHT':'768'},
-    //     },
-    //     serverType: 'geoserver'
-    //   })
-    // });
-    // map.addLayer(wmsLayer);
-
-    sendRequestWMS("GetWMS","","GET").then((result)=>{
-      console.log(result.body.getReader().read().then(({value,done})=>{
-        console.log("image geldi");
-        if(!done){
-          const blob = new Blob([value], { type: 'image/png' });
-          const _imageUrl = URL.createObjectURL(blob);
-          setimageUrl(_imageUrl)
-          console.log(_imageUrl);
-
-          var imageBounds = [24.713407516479492, 32.70863342285156, 46.297359466552734, 42.6185417175293];
-          const imageLayer = new ImageLayer({
-            source: new ImageStatic({
-              url: imageUrl,
-              projection: 'EPSG:4326',
-              imageExtent: imageBounds
-            })
-          });
-          imageLayer.setOpacity(1)
-          map.addLayer(imageLayer)
-
-        }
-      }));
-    })
+  const clearImageLayer=()=>{
+    var layers = map.getLayers().getArray();
+    var layerToRemove = layers.find(layer => layer.get('name') === "imageLayer");
+    if(layerToRemove){
+      map.removeLayer(layerToRemove);
+    }
+  }
+  const handleWmslayerData=(imageLayer)=>{
+    var layers = map.getLayers().getArray();
+    var layerToRemove = layers.find(layer => layer.get('name') === "imageLayer");
+    if(layerToRemove){}else{map.addLayer(imageLayer)}
+      // map.removeLayer(layerToRemove);
+      
+   
   }
 
   return (
@@ -604,6 +577,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         <button
           id="typeButton5"
           onClick={()=> {
+            clearImageLayer()
             console.log("tıktık");
             navigate("/admin");
           }}
@@ -615,6 +589,9 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         ""
       )}
       <GetWMS handleWmslayerData={handleWmslayerData}></GetWMS>
+
+      {/* Sırada wfs var. Wfs getir denilecek. Modal acılacak. Feature lar goruntulenecek. Istenen feature lara gore arkaplan da dinamik bir link olusturulup 
+      ona gore istek atılıp geriye donen verideki feature haritaya basılacak.   */}
     </>
   );
 };

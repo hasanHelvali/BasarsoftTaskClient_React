@@ -5,30 +5,34 @@ import ImageLayer from 'ol/layer/Image';
 import { ImageStatic, XYZ } from 'ol/source';
 import TileLayer from 'ol/layer/Tile';
 function GetWMS({handleWmslayerData}) {
+  const [imageUrl, setimageUrl] = useState()
     const {handleLoading} = useMyContext()
     const [pngData, setPngData] = useState(null);
     const [layer, setlayer] = useState(null);
 
     
     const getWms=()=>{
-        //  sendRequestWMS("GetWMS","","GET")
-        //     .then(async (response)=>{
-        //         console.log(response.body);
-        //         // setPngData(response.pngData);
-        //         // handleWmslayerData(response.pngData)
-        //         const pngDataUrl = URL.createObjectURL(response.body); // PNG görüntüsünün veri URL'si
-        //         const imageLayer = new Image({
-        //             source: new ImageStatic({
-        //                 url: pngDataUrl,
-        //                 imageSize: [250, 250], // Görüntünün boyutu
-        //                 projection: 'EPSG:4326', // Koordinat sistemi
-        //                 // imageExtent: [minx, miny, maxx, maxy] // Görüntünün koordinatları
-        //             })
-        //         });
-        //         handleWmslayerData(imageLayer)
-        //     });
-        //     // setimgSrc(blob)
-        handleWmslayerData();
+        sendRequestWMS("GetWMS","","GET").then((result)=>{
+          console.log(result.body.getReader().read().then(({value,done})=>{
+            console.log("image geldi");
+            if(!done){
+              const blob = new Blob([value], { type: 'image/png' });
+              const _imageUrl = URL.createObjectURL(blob);
+              setimageUrl(_imageUrl)
+              console.log(_imageUrl);
+              var imageBounds = [24.713407516479492, 32.70863342285156, 46.297359466552734, 42.6185417175293];
+              const imageLayer = new ImageLayer({
+                name:"imageLayer",
+                source: new ImageStatic({
+                  url: _imageUrl,
+                  projection: 'EPSG:4326',
+                  imageExtent: imageBounds
+                })
+              });
+              handleWmslayerData(imageLayer);
+            }
+          }));
+        })
     }
 const [imgSrc, setimgSrc] = useState()
 

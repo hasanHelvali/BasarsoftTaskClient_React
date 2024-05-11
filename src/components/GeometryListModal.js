@@ -10,6 +10,7 @@ import { ReactComponent as Trash } from 'bootstrap-icons/icons/trash.svg';
 import { useMyContext } from '../context/DataContext';
 import VerifyToken from '../services/Auth.service';
 import { useNavigate } from 'react-router-dom';
+import * as $ from 'jquery';
 function GeometryListModal({ open, handleClose, getLocation, deleteLocAndUser,isGeometryListModalOpen,showFeature}) {
     const navigate = useNavigate();
     const [listLocAndUsers, setListLocAndUsers] = useState([])
@@ -46,8 +47,18 @@ function GeometryListModal({ open, handleClose, getLocation, deleteLocAndUser,is
     }, [])
 
 
-    const deleteFeature=(item)=>{
-        
+    const deleteFeature=(id)=>{
+        handleLoading(true);
+        const element = $("#dataRow"+id);
+        sendRequest("maps","","DELETE",null,id).then((result)=>{
+            handleLoading(false)
+            element.fadeOut(500, () => {
+                // Animasyon tamamlandıktan sonra satırı DOM'dan kaldır
+                element.remove();
+              });
+        }).catch((err)=>{
+            alert("Silme Islemi Sırasında Bir Hata Oluştu...")
+        })
     }
     // const handleClose=()=>{
         
@@ -87,7 +98,7 @@ function GeometryListModal({ open, handleClose, getLocation, deleteLocAndUser,is
                                     <PinMapFill  color="text-warning" size={30}/>
                                     </span>
                                 </td>
-                                <td className='border'><span className='icon' onClick={()=>deleteFeature(item)}>
+                                <td className='border'><span className='icon' onClick={()=>deleteFeature(item.id)}>
                                     {/* <i className="bi bi-trash text-danger" ></i> */}
                                     <Trash color="red" size={30} className='text-warning'/>
                                     </span>
