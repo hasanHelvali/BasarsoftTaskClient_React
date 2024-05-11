@@ -24,6 +24,7 @@ export function sendRequest(controller,action, method,bodyData,queryData) {
         console.log(response);
         // Yanıtın durumuna göre işlemler
         if (!response.ok) {
+          console.log(response);
           throw new Error('Istek basarısız oldu!');
         }
         return response.json()
@@ -76,6 +77,39 @@ export function sendRequest(controller,action, method,bodyData,queryData) {
 //     });
 
 
+export function sendRequestWMS(controller,action, method) {
+  const jwt = localStorage.getItem('token')
+  const isVerify = VerifyToken(jwt)
+  if(isVerify){
+    const options = {
+        method: method,
+        headers: {
+            'content-type':'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("token")}` // Header'a token ekleniyor
+        },
+      };
+    return fetch(`${getApiUrl()}/${controller}${action?"/"+action:""}`, options)
+    .then(response => {
+        // console.log(response.body);
+        // Yanıtın durumuna göre işlemler
+        if (!response.ok) {
+          console.log(response);
+          throw new Error('Istek basarısız oldu!');
+        }
+        return response
+  
+      })
+
+      .catch(error => {
+        throw error; 
+      });
+  }
+  else{
+    localStorage.setItem('Token',"")//token gecersiz ise local storage bosaltılır.
+
+  }
+    
+  }
 
 
 

@@ -42,14 +42,14 @@
   }
   #typeButton2{
     position: absolute;
-    top: 300px;
+    top: 350px;
     width: 8rem;
     right: 3px; 
     z-index: 1;
   }
   #typeButton6{
     position: absolute;
-    top: 400px;
+    top: 450px;
     width: 8rem;
     right: 3px; 
     z-index: 1;
@@ -118,4 +118,13 @@
 }
 .ol-popup-closer:after {
   content: "✖";
+}
+
+
+.wmsButton{
+  position: absolute;
+  top: 200px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
 }

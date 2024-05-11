@@ -95,7 +95,7 @@ function Roles() {
         setrowData(null)
         console.log(role);
         console.log(rowData.id);
-          handleLoading(true)
+          handleLoading(true) 
 
         // console.log(dropdownStates[rowData.id]);
         // console.log( getDefaultRole(rowData))

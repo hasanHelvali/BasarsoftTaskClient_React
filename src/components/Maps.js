@@ -9,6 +9,8 @@ import { fromLonLat, toLonLat } from "ol/proj";
 import SelectForm from "./SelectForm";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
+import ImageLayer from 'ol/layer/Image';
+import ImageStatic from 'ol/source/ImageStatic';
 import {
   Draw,
   Interaction,
@@ -27,13 +29,15 @@ import { UpdateLocation } from "../models/UpdateLocation";
 import WKT from "ol/format/WKT";
 import UpdateModal from "./UpdateModal";
 import AllFeatureModal from "./AllFeatureModal";
-import { Overlay } from "ol";
+import { Overlay, Tile } from "ol";
 import { InteractionAuth } from "../models/InteractionAuth";
 import StartInteraction from "./StartInteraction";
-import { sendRequest } from "../services/httpClient.service";
+import { sendRequest, sendRequestWMS } from "../services/httpClient.service";
 import { toStringHDMS } from "ol/coordinate";
 import { CustomIntersection } from "../models/Interaction";
 import VerifyToken from "../services/Auth.service";
+import GetWMS from "./GetWMS";
+import LayerGroup, { GroupEvent } from "ol/layer/Group";
 let map;
 let vectorLayer;
 let drawInteraction;
@@ -43,72 +47,6 @@ let _data;
 let snap;
 let overlay;
 let interaction;
-// let intersec;
-// function addLayer() {
-//   vectorLayer = new VectorLayer({
-//     source: new VectorSource(),
-//     style: {
-//       'fill-color': 'rgba(0, 0, 0, 0.3)',
-//       'stroke-color': '#000',
-//       'stroke-width': 2,
-//       'circle-radius': 7,
-//       'circle-fill-color': '#ffcc33',
-//     },
-//     className: 'vecLay',
-//   });
-//   map.addLayer(vectorLayer);
-// }
-
-// function clearFeature(){
-//     vectorLayer.getSource().clear();//Burada source icinde ki feature lar temizlendi.
-// }
-
-// function addFeature(value) {
-
-//   clearFeature()
-//   if(value==="") {
-//     map.removeInteraction(drawInteraction)
-//     return;
-//   }
-//   vectorLayer.getSource().clear();
-//   // this.generalDataService.selectedOptions.next(value)
-//   // let that = this;
-//   // // this.generalDataService.getFeatureType(value); //service deki feature tipini guncellestiriyorum.
-//   drawInteraction = new Draw({
-//     type:value
-//     // Çizilebilecek şekil türünü (Point, LineString, Polygon) seciyorum
-//   });
-
-//   map.addInteraction(drawInteraction); //interaction i map e ekliyorum.
-//   // this.changeDetectorRef.detectChanges();
-
-//   map.on('click', (event) => {
-//     //her click edildiginde
-//     const coordinateLong = event.coordinate[0];
-//     const coordinateLat = event.coordinate[1];
-//   });
-
-//   drawInteraction.on('drawend', function (event) {
-//     // that.generalDataService.setLocation(null);
-//     // that.generalDataService._wkt=null;
-//     //cizim bittiginde
-//     clearFeature()
-//     var feature = event.feature;
-//     // const _type: FeatureType = event.feature
-//     //   .getGeometry()
-//     //   .getType() as FeatureType;
-
-//     vectorLayer.getSource().addFeature(feature);
-//     var geometry = feature.getGeometry();
-//     const data=new GeoLocation(geometry.getType(),geometry.getCoordinates())
-//     _data=data
-//     isEndFeatureModalOpen=true;
-//     this.handleDataCapture(data)
-//     // that.generalDataService.geometryToWkt(feature); //service class ında bir property ye wkt verisi aktarıldı.
-//     // that.generalDataService.setLocation(data);
-//     // Burada ilgili service yapısına datalar gonderildigi anda ilgili coordinates modalı acılır.
-//   });
-// }
 const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   //map component baslangıcı
   // const [isEndFeatureModalOpen, setIsEndFeatureModalOpen] = useState(false)
@@ -374,14 +312,6 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       setnewCoordinates(data);
       value.wkt = geometryToWkt(feature);
       setUpdatedFeature(value);
-      // this.generalDataService.updatedLocation=data;
-      // _data.type=data.type;
-      // _data.coordinates=data.coordinates;
-      //Elde edilen son geometri verisini wkt ye tekrardan cast etmem gerek
-      // _data.wkt=this.generalDataService.updateGeometryToWkt(feature);
-      // this.generalDataService.featureUpdateGeneralData.next(_data);
-
-      // Değişiklikler tamamlandı
     });
   };
 
@@ -527,9 +457,57 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         map.removeInteraction(interaction);
     });
   }
+  const [imageUrl, setimageUrl] = useState()
+  const handleWmslayerData=(layerData)=>{
+    // console.log(layerData);
+    // const layer = 
+    // new ImageLayer({
+    //   source: new ImageStatic({
+    //     url: `data:image/png;base64,${layerData}`,
+    //     imageExtent: [0, 0, 100, 100] // Verinin boyutlarına göre ayarlayın
+    //   })
+    // })
+    
+    // var wmsLayer = new TileLayer({
+    //   source: new TileWMS({
+    //     url: 'http://localhost:8081/geoserver/basarsoft/wms', // Geoserver URL'si
+    //     params: {
+    //       //  'FORMAT':'text/html; subtype=openlayers'
+    //        params: { 'REQUEST':'GetMap','BBOX':'437762.766104487,4376882.69760637,522118.932880649,4461344.83731443', 'LAYERS': 'basarsoft:LocsAndUsers', 'TILED': true  ,'SRS':'EPSG:4326','FORMAT':'application/openlayers','WİDTH':'767','HEİGHT':'768'},
+    //     },
+    //     serverType: 'geoserver'
+    //   })
+    // });
+    // map.addLayer(wmsLayer);
+
+    sendRequestWMS("GetWMS","","GET").then((result)=>{
+      console.log(result.body.getReader().read().then(({value,done})=>{
+        console.log("image geldi");
+        if(!done){
+          const blob = new Blob([value], { type: 'image/png' });
+          const _imageUrl = URL.createObjectURL(blob);
+          setimageUrl(_imageUrl)
+          console.log(_imageUrl);
+
+          var imageBounds = [24.713407516479492, 32.70863342285156, 46.297359466552734, 42.6185417175293];
+          const imageLayer = new ImageLayer({
+            source: new ImageStatic({
+              url: imageUrl,
+              projection: 'EPSG:4326',
+              imageExtent: imageBounds
+            })
+          });
+          imageLayer.setOpacity(1)
+          map.addLayer(imageLayer)
+
+        }
+      }));
+    })
+  }
 
   return (
     <>
+    {/* <img src={imageUrl} alt="Map Layer" /> */}
       <div className="map" ref={mapRef} />
       {/* 
           Bu kod, React bileşenlerinde bir <div> elementi oluşturur ve bu <div> elementine map sınıfını ekler. 
@@ -582,7 +560,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         className="btn btn-danger"
         disabled={openGeometryListModalButtonDisable}
         onClick={openGeometryListModal}
-        style={{ "background-color": "#fff", color: "black" }}
+        style={{ "backgroundColor": "#fff", color: "black" }}
       >
         Tüm Kayıtlar
       </button>
@@ -636,99 +614,8 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
+      <GetWMS handleWmslayerData={handleWmslayerData}></GetWMS>
     </>
   );
 };
 export default Maps;
-/*
-   startIntersection(){
-      this.vectorLayer.getSource().clear();
-      let that=this;
-      const drawInteraction = new Draw({
-        type: "Point", // Çizilebilecek şekil türünü (Point, LineString, Polygon) seciyorum
-      });//point olusuturukldu
-      this.map.addInteraction(drawInteraction);//Point seklindeki interaction haritaya eklendi.
-      
-      drawInteraction.on('drawstart', function (event) {
-        
-      })
-        drawInteraction.on('drawend', function (event) {
-        that.showSpinner();
-        var feature = event.feature;
-        var geometry = feature.getGeometry() as any;
-        var coordinates= geometry.getCoordinates();
-        that.generalDataService.intersectionPosition.next(coordinates);
-        if( that.overlay.getElement()){
-          that.overlay.setPosition(coordinates)
-          console.log("setposiiton var");
-        }
-        that.changeDetectorRef.detectChanges()
-
-        const _type: FeatureType = event.feature
-          .getGeometry()
-          .getType() as FeatureType;
-
-          var geometry = feature.getGeometry() as any;
-
-        var format = new WKT();
-
-        const _locWkt = format.writeGeometry(feature.getGeometry(), {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        });
-
-        const role = that.generalDataService.role;//rolu aldım.
-        const id = that.generalDataService.identifier;
-        var interactAuth:InteractionAuth=new InteractionAuth();
-        interactAuth.pointWKT=_locWkt
-        interactAuth.role=role;
-        interactAuth.id=id;
-
-        that.httpCLientService.post<any>({controller:"maps",action:"InteractionExists"},interactAuth).subscribe({//kesisim varsa
-          next:(data)=>{
-            that.showSpinner();
-            if(data==null){
-              that.generalDataService.modelIntersection.next("Bir Kesişim Bulunamadı.");
-              that.generalDataService.intersectionActive.next(false);
-              that.vectorLayer.getSource().clear()
-              that.changeDetectorRef.detectChanges()
-              that.hideSpinner();
-              return 
-            }
-            that.hideSpinner();
-
-            that.intersection=data as LocAndUsers;
-            that.overlay = new Overlay({
-              element: document.getElementById('popup'),
-              autoPan: true,
-            });
-
-            that.map.addOverlay(that.overlay);
-            const hdms = toStringHDMS(toLonLat(coordinates));
-            that.generalDataService.modelIntersection.next({hdms:hdms,name:data.name });
-            that.overlay?.setPosition(coordinates);
-            that.vectorLayer.getSource().addFeature(feature);
-            that.changeDetectorRef.detectChanges();
-            that.hideSpinner();
-            
-          },
-          error:(err)=>{
-            alert("Kesisim veya Yetki Yok")
-            that.hideSpinner();
-            that.generalDataService.modelIntersection.next("Bir Kesişim Bulunamadı.");
-              that.generalDataService.intersectionActive.next(false);
-              that.vectorLayer.getSource().clear()
-              that.generalDataService.closeIntersection.next(true);
-              that.hideSpinner();
-              that.changeDetectorRef.detectChanges()
-            that.closeToolTip();
-          }
-        }) 
-        that.map.on('click', (event) => {
-           that.clearFeature()
-           that.pixel = event.pixel
-           that.changeDetectorRef.detectChanges()
-        });
-        })
-  }
-   */
