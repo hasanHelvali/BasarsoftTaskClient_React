@@ -469,13 +469,19 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       map.removeLayer(layerToRemove);
     }
   }
+  const [isWmsClick, setisWmsClick] = useState(false)
   const handleWmslayerData=(imageLayer)=>{
+    setisWmsClick(true);
     var layers = map.getLayers().getArray();
     var layerToRemove = layers.find(layer => layer.get('name') === "imageLayer");
     if(layerToRemove){}else{map.addLayer(imageLayer)}
       // map.removeLayer(layerToRemove);
       
    
+  }
+  const handleClearWms=()=>{
+    setisWmsClick(false)
+    clearImageLayer();
   }
 
   return (
@@ -486,18 +492,18 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
           Bu kod, React bileşenlerinde bir <div> elementi oluşturur ve bu <div> elementine map sınıfını ekler. 
           Ayrıca, bu <div> elementine bir referans ekler, yani mapRef değişkenine atar.
           */}
-      {
+      {isWmsClick===false ?
         <SelectForm
           disable={selectFormActive}
           onSelectChange={handleSelectChange}
-        />
+        />:""
       }
 
       {/* SelectForm component ini goruntuye alıyorum. SelectForm dan gecilen props u burada yakalıyorum ve handleSelectChange fonksiyonunu tetikliyorum.*/}
 
       {/* {isEndFeatureModalOpen && <EndFeatureModal onClose={handleCloseModal} />} */}
-      {isEndFeatureModalOpen === true ? <EndFeatureModal /> : ""}
-      {isGeometryListModalOpen === true ? (
+      {isEndFeatureModalOpen === true && isWmsClick===false? <EndFeatureModal /> : ""}
+      {isGeometryListModalOpen === true && isWmsClick===false? (
         <GeometryListModal
           isGeometryListModalOpen={isGeometryListModalOpen}
           handleClose={handleClose}
@@ -506,7 +512,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
-      {isOpenupdatedFeatureModal === true ? (
+      {isOpenupdatedFeatureModal === true && isWmsClick===false? (
         <UpdateModal
           feature={updatedFeature}
           handleClose={handleUpdateModalClose}
@@ -514,7 +520,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
-      {isOpenAllFeatureModel === true ? (
+      {isOpenAllFeatureModel === true && isWmsClick===false ? (
         <AllFeatureModal
           handleClose={handleCloseAllFeatureModal}
           handleSelectedFeatureMap={handleSelectedFeatureMap}
@@ -528,16 +534,18 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       <button className="btn btn-danger" id="typeButton6" onClick={logOut}>
         Çıkış
       </button>
-      <button
+      {isWmsClick===false?
+        <button
         id="typeButton"
         className="btn btn-danger"
         disabled={openGeometryListModalButtonDisable}
         onClick={openGeometryListModal}
         style={{ "backgroundColor": "#fff", color: "black" }}
-      >
+        >
         Tüm Kayıtlar
-      </button>
-      {isAllFeatureButtonActive === true ? (
+      </button>:""
+      }
+      {isAllFeatureButtonActive === true &&isWmsClick===false?  (
         <button
           className="btn btn-danger"
           id="typeButton3"
@@ -561,7 +569,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
-      {role !== "SuperAdmin" ? (
+      {role !== "SuperAdmin" && isWmsClick===false ? (
         <button
           className="btn btn-danger"
           id="typeButton4"
@@ -573,7 +581,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
-      {(role === "SuperAdmin" || role==="Admin") ? (
+      {(role === "SuperAdmin" || role==="Admin")&&isWmsClick===false ? (
         <button
           id="typeButton5"
           onClick={()=> {
@@ -588,7 +596,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       ) : (
         ""
       )}
-      <GetWMS handleWmslayerData={handleWmslayerData}></GetWMS>
+      <GetWMS handleWmslayerData={handleWmslayerData} clearWms={handleClearWms}></GetWMS>
 
       {/* Sırada wfs var. Wfs getir denilecek. Modal acılacak. Feature lar goruntulenecek. Istenen feature lara gore arkaplan da dinamik bir link olusturulup 
       ona gore istek atılıp geriye donen verideki feature haritaya basılacak.   */}

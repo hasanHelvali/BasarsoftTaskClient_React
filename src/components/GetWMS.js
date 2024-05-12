@@ -4,12 +4,12 @@ import { useMyContext } from '../context/DataContext';
 import ImageLayer from 'ol/layer/Image';
 import { ImageStatic, XYZ } from 'ol/source';
 import TileLayer from 'ol/layer/Tile';
-function GetWMS({handleWmslayerData}) {
+function GetWMS({handleWmslayerData,clearWms}) {
   const [imageUrl, setimageUrl] = useState()
     const {handleLoading} = useMyContext()
     const [pngData, setPngData] = useState(null);
     const [layer, setlayer] = useState(null);
-
+    const [isWmsActive, setIsWmsActive] = useState(false)
     
     const getWms=()=>{
         sendRequestWMS("GetWMS","","GET").then((result)=>{
@@ -30,6 +30,7 @@ function GetWMS({handleWmslayerData}) {
                 })
               });
               handleWmslayerData(imageLayer);
+              setIsWmsActive(true);
             }
           }));
         })
@@ -38,10 +39,16 @@ const [imgSrc, setimgSrc] = useState()
 
   return (
     <div>
-        {imgSrc!==null ?
+        {/* {imgSrc!==null ?
             <img src={imgSrc} alt="" />:""
+        } */}
+        {
+          isWmsActive ===false ?<button className='wmsButton btn btn-danger' onClick={getWms}>WMS Harita Getir</button>:
+        <button className='wmsButton btn btn-danger' onClick={()=>{
+          clearWms()
+          setIsWmsActive(false);
+        }}>WMS Haritayı Kapat</button>
         }
-        <button className='wmsButton btn btn-danger' onClick={getWms}>WMS Harita Getir</button>
     </div>
   )
 }
