@@ -128,3 +128,17 @@
   left: 3px; 
   z-index: 2;
 }
+.wfsButton{
+  position: absolute;
+  top: 300px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
+}
+.wfsButton2{
+    position: absolute;
+    top: 350px;
+    width: 8rem;
+    left: 3px; 
+    z-index: 2;
+}

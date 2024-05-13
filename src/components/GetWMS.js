@@ -39,9 +39,6 @@ const [imgSrc, setimgSrc] = useState()
 
   return (
     <div>
-        {/* {imgSrc!==null ?
-            <img src={imgSrc} alt="" />:""
-        } */}
         {
           isWmsActive ===false ?<button className='wmsButton btn btn-danger' onClick={getWms}>WMS Harita Getir</button>:
         <button className='wmsButton btn btn-danger' onClick={()=>{

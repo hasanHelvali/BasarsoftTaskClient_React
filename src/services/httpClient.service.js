@@ -16,12 +16,14 @@ export function sendRequest(controller,action, method,bodyData,queryData) {
             'content-type':'application/json',
           'Authorization': `Bearer ${localStorage.getItem("token")}` // Header'a token ekleniyor
         },
-        body:JSON.stringify(bodyData)
+        // body:JSON.stringify(bodyData)
       };
+      if(bodyData!==null){
+        options.body=JSON.stringify(bodyData)
+      }
       console.log(queryData);
     return fetch(`${getApiUrl()}/${controller}${action?"/"+action:""}${queryData?"/"+queryData:""}`, options)
       .then(response => {
-        console.log(response);
         // Yanıtın durumuna göre işlemler
         if (!response.ok) {
           console.log(response);

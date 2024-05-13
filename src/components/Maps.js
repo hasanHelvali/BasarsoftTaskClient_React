@@ -11,6 +11,7 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import ImageLayer from 'ol/layer/Image';
 import ImageStatic from 'ol/source/ImageStatic';
+import GeoJSON from 'ol/format/GeoJSON';
 import {
   Draw,
   Interaction,
@@ -38,6 +39,11 @@ import { CustomIntersection } from "../models/Interaction";
 import VerifyToken from "../services/Auth.service";
 import GetWMS from "./GetWMS";
 import LayerGroup, { GroupEvent } from "ol/layer/Group";
+import GetWFS from "./GetWFS";
+import { VscDebugPause } from "react-icons/vsc";
+import Style from "ol/style/Style";
+import Stroke from "ol/style/Stroke";
+import Fill from "ol/style/Fill";
 let map;
 let vectorLayer;
 let drawInteraction;
@@ -75,6 +81,19 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     useState(false);
   const [selectFormActive, setselectFormActive] = useState(false);
 
+  const wfsVectorLayer = new VectorLayer({
+    source: null,
+    style: new Style({
+      stroke: new Stroke({
+        color: 'blue',
+        width: 3
+      }),
+      fill: new Fill({
+        color: 'rgba(0, 0, 255, 0.1)'
+      })
+    })
+  });
+
   handleSelectedFeatureMap = (value) => {
     // setSelectedPrimeModalFeature(value)
     console.log(value);
@@ -91,6 +110,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       duration: 1000,
     });
   };
+
 
   function addFeature(value) {
     clearFeature();
@@ -266,6 +286,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     console.log(item);
   };
   const setShowFeatureFunc = (value) => {
+    debugger
     //openlayers icin en onemli fonksiyon
     setShowFeature(value);
     //id dahil butun veri burada valeu nun icinde
@@ -483,7 +504,28 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     setisWmsClick(false)
     clearImageLayer();
   }
+ 
+  const handleSelectedFeatureWFSMap=(geoJsonObject)=>{
+    console.log(geoJsonObject);//e verisinde geojson verisi elde edildi.
+    //setShowFeatureFunc cagrılacak
+    const vectorSource = new VectorSource({
+      features: new GeoJSON().readFeatures(geoJsonObject, {
+        // Verinizin projeksiyonunu burada belirtin, eğer farklıysa
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857'
+      })
+    });
 
+    wfsVectorLayer.setSource(vectorSource)
+    map.addLayer(wfsVectorLayer);
+    map.getView().fit(vectorSource.getExtent());//ile haritanın görünümünü Feature’ın sınırlarına göre ayarladım.
+  }
+
+  const handleClearWfs=()=>{
+    map.getLayers().getArray()
+      .filter(layer => layer instanceof VectorLayer)
+      .forEach(vectorLayer => vectorLayer.getSource().clear());
+  }
   return (
     <>
     {/* <img src={imageUrl} alt="Map Layer" /> */}
@@ -597,6 +639,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         ""
       )}
       <GetWMS handleWmslayerData={handleWmslayerData} clearWms={handleClearWms}></GetWMS>
+      <GetWFS handleSelectedFeatureWFSMap={handleSelectedFeatureWFSMap} handleClearWfs={handleClearWfs}></GetWFS>
 
       {/* Sırada wfs var. Wfs getir denilecek. Modal acılacak. Feature lar goruntulenecek. Istenen feature lara gore arkaplan da dinamik bir link olusturulup 
       ona gore istek atılıp geriye donen verideki feature haritaya basılacak.   */}

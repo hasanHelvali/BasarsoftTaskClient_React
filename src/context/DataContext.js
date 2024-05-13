@@ -30,13 +30,10 @@ const [activeAdminPageComponentUrl, setactiveAdminPageComponentUrl] = useState()
   }
 
   const handleIsAuth=(value)=>{
-    console.log(value);
     setisAuth(value) 
   }
   const handleJWT=(value)=>{
     setJwt(value);
-    console.log(value);
-    console.log(jwt);
   }
   const handleLoading=(value)=>{
     setloading(value);
