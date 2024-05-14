@@ -44,7 +44,7 @@ const [imgSrc, setimgSrc] = useState()
         <button className='wmsButton btn btn-danger' onClick={()=>{
           clearWms()
           setIsWmsActive(false);
-        }}>WMS Haritayı Kapat</button>
+        }}>WMS Haritayı Kapat</button>  
         }
     </div>
   )

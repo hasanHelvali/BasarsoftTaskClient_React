@@ -12,6 +12,7 @@ import VectorSource from "ol/source/Vector";
 import ImageLayer from 'ol/layer/Image';
 import ImageStatic from 'ol/source/ImageStatic';
 import GeoJSON from 'ol/format/GeoJSON';
+import RegularShape from 'ol/style/RegularShape';
 import {
   Draw,
   Interaction,
@@ -30,7 +31,7 @@ import { UpdateLocation } from "../models/UpdateLocation";
 import WKT from "ol/format/WKT";
 import UpdateModal from "./UpdateModal";
 import AllFeatureModal from "./AllFeatureModal";
-import { Overlay, Tile } from "ol";
+import { Feature, Overlay, Tile } from "ol";
 import { InteractionAuth } from "../models/InteractionAuth";
 import StartInteraction from "./StartInteraction";
 import { sendRequest, sendRequestWMS } from "../services/httpClient.service";
@@ -44,6 +45,10 @@ import { VscDebugPause } from "react-icons/vsc";
 import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
 import Fill from "ol/style/Fill";
+import Icon from "ol/style/Icon";
+import { LineString, Point } from "ol/geom";
+import { Circle } from 'ol/style';
+
 let map;
 let vectorLayer;
 let drawInteraction;
@@ -81,8 +86,10 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     useState(false);
   const [selectFormActive, setselectFormActive] = useState(false);
 
+  const [featureDistanceIsActive, setFeatureDistanceIsActive] = useState(false)
+
   const wfsVectorLayer = new VectorLayer({
-    source: null,
+    source: undefined,
     style: new Style({
       stroke: new Stroke({
         color: 'blue',
@@ -200,8 +207,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   const [isFeatureChanged, setisFeatureChanged] = useState(false);
   const [newCoordinates, setnewCoordinates] = useState();
   const [updatedFeature, setUpdatedFeature] = useState();
-  const [isOpenupdatedFeatureModal, setIsOpenupdatedFeatureModal] =
-    useState(false);
+  const [isOpenupdatedFeatureModal, setIsOpenupdatedFeatureModal] =useState(false);
   type = selectedValue;
   //secilen selectbox degeri icin bir state tutuyorum. Baslangıcta bos degerde.
 
@@ -504,27 +510,227 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     setisWmsClick(false)
     clearImageLayer();
   }
- 
+  const [isLayer, setisLayer] = useState(false)
+  const [vectorSource, setVectorSource] = useState(null);
+  const [snapInteractionAdded, setSnapInteractionAdded] = useState(false);
+  // const [feature, setfeature] = useState()
   const handleSelectedFeatureWFSMap=(geoJsonObject)=>{
-    console.log(geoJsonObject);//e verisinde geojson verisi elde edildi.
-    //setShowFeatureFunc cagrılacak
-    const vectorSource = new VectorSource({
-      features: new GeoJSON().readFeatures(geoJsonObject, {
-        // Verinizin projeksiyonunu burada belirtin, eğer farklıysa
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
+    setisWmsClick(true)
+    let feature =geoJsonObject["features"][0]["properties"]["Type"];
+    if (!vectorSource) {//vectorSource en basta null degerinde yani en basta buraya gelinecek.
+      const newVectorSource = new VectorSource({
+          features: new GeoJSON().readFeatures(geoJsonObject, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'//gelen verinin gosterilecegi vectorSource ayarlandı
+        }) 
+      });
+      
+      setVectorSource(newVectorSource);//vectorSource set lendi artık null degil bu yuzden alttaki layer ikinci kez olusturulmayacak.
+      
+      // Point geometrileri için stil
+      const pointStyle = new Style({
+        image: new Circle({
+          radius: 5,
+          fill: new Fill({
+            color: 'rgba(255, 0, 0, 0.8)' // Kırmızı renkli dolgu
+          }),
+          stroke: new Stroke({
+            color: 'black', // Siyah çerçeve
+            width: 1 // Çerçeve genişliği daha makul bir değere ayarlandı
+          })
+        })
+      });
+      
+
+// Polygon geometrileri için stil
+    const polygonStyle = new Style({
+      stroke: new Stroke({
+        color: 'black',
+        width: 3
+      }),
+      fill: new Fill({
+        color: 'rgba(0, 0, 255, 0.1)' // Mavi renkli dolgu
       })
     });
 
-    wfsVectorLayer.setSource(vectorSource)
-    map.addLayer(wfsVectorLayer);
-    map.getView().fit(vectorSource.getExtent());//ile haritanın görünümünü Feature’ın sınırlarına göre ayarladım.
+    // Stil fonksiyonu, geometri türüne göre stil döndürür
+    const styleFunction = (feature) => {
+      switch (feature.getGeometry().getType()) {
+        case 'Point':
+          return pointStyle;
+        case 'Polygon':
+          return polygonStyle;
+        // Diğer geometri türleri için daha fazla case eklenebilir
+        default:
+          // Varsayılan stil
+          return new Style({});
+      }
+    };
+      const newLayer = new VectorLayer({//layer icerisine eklenen feature ların stilini yukarıdaki fonksiyonlardan alır
+        source: newVectorSource,
+        style: styleFunction
+      });
+      map.addLayer(newLayer);//layer haritaya eklendi.
+
+      map.getView().fit(newVectorSource.getExtent());//eklenen feature kadar haritaya yakınlasma yapıldı
+  } else {//eger vectorSource varsa
+      const newFeatures = new GeoJSON().readFeatures(geoJsonObject, {//gelen veriye gore feature olusturuluyor
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+      });
+      vectorSource.addFeatures(newFeatures);//vectorSource setlenmisti. bu setlenen yapıya bir feature ekleniyor.
+      map.getView().fit(vectorSource.getExtent());//harita eklenen feature kadar yakınlastırılıyor.
+      //ile haritanın görünümünü Feature’ın sınırlarına göre ayarladım.
+      
+      const draw= new Draw({//yeni bir cizim yaptırıyorum. Bu cizim linestring olacak.
+        
+        source: vectorSource,
+        type: 'LineString',
+      })
+      map.addInteraction(draw);//bu yeni nesne haritaya interaction ekleniyor.
+      // modify.setActive(true);
+    // }
+    snap = new Snap({//bir snap olusturuluyor
+      source: vectorSource
+    });
+    map.addInteraction(snap);//snap de 
+    draw.on('drawend', (event) => {//cizim bittiginde 
+      const feature = new Feature({//feature alınıyor
+        geometry: event.feature.getGeometry(),
+      });
+    
+      const geometry = feature.getGeometry();//geometrisi alınıyor
+      const coordinates = geometry.getCoordinates();//coordinatları alınıyor
+      const length = coordinates.length;//koordanatların uzunlugu alındı
+      const mesafe = geometry.getLength();//koordanatların uzunlugu alındı
+      const midpoint = geometry.getCoordinateAt(0.5);
+    
+      const labelContent = document.createElement('div');
+      labelContent.innerHTML = `Mesafe: ${mesafe.toFixed(2)} m`; // Etiket içeriği
+      const labelStyle = new Style({
+        text: new Text({
+          text: labelContent.innerHTML,
+          scale: 1.5,
+          fill: new Fill({
+            color: '#ffcc33'
+          })
+        })
+      });
+      const labelOverlay = new Overlay({
+        position: midpoint,
+        element: labelContent,
+      });
+      labelContent.classList.add('overlay-background');
+      map.addOverlay(labelOverlay);
+      // Başlangıç ve bitiş noktaları için ok şeklinde stil tanımı
+
+      // Bu fonksiyon, bir koordinat ve dönüş açısı alır ve bir stil döndürür.
+      const arrowStyle = (coordinate, rotation) => new Style({
+        // Yeni bir nokta geometrisi oluşturur ve bu noktaya stil uygular.
+        geometry: new Point(coordinate),
+        // RegularShape ile bir ok şekli oluşturur.
+        image: new RegularShape({
+          // Okun içini siyah renkle doldurur.
+          fill: new Fill({ color: 'black' }),
+          // Okun çevresine siyah, 2 piksel genişliğinde bir çizgi çizer.
+          stroke: new Stroke({
+            color: 'black',
+            width: 2
+          }),
+          // Okun üç köşesi olacak şekilde ayarlar (üçgen şekli için).
+          points: 3,
+          // Okun boyutunu belirler (yarıçap).
+          radius: 10,
+          // Okun haritadaki dönüş açısını ayarlar (radyan cinsinden).
+          rotation: rotation,
+          // Okun başlangıç açısını ayarlar (genellikle 0 olarak bırakılır).
+          angle: 0
+        })
+      });
+
+      
+    
+      // Linestring için varsayılan stil
+      const lineStyle = new Style({
+        stroke: new Stroke({
+          color: 'blue',
+          width: 3
+        })
+      });
+    
+    // Linestring'in başlangıç noktasındaki okun dönüş açısını hesaplar.
+    const startRotation = Math.atan2(
+      coordinates[1][1] - coordinates[0][1], // Y eksenindeki değişim
+      coordinates[1][0] - coordinates[0][0]  // X eksenindeki değişim
+    );
+    // Bu, başlangıç noktasındaki okun linestring yönünde olmasını sağlar.
+
+    // Linestring'in bitiş noktasındaki okun dönüş açısını hesaplar.
+    const endRotation = Math.atan2(
+      coordinates[length - 1][1] - coordinates[length - 2][1], // Y eksenindeki değişim
+      coordinates[length - 1][0] - coordinates[length - 2][0]  // X eksenindeki değişim
+    );
+    // Bu, bitiş noktasındaki okun linestring yönünde olmasını sağlar.
+    
+      // Stilleri uygula
+      feature.setStyle([
+        lineStyle,
+        arrowStyle(coordinates[0], startRotation),
+        arrowStyle(coordinates[length - 1], endRotation)
+      ]);
+    
+      // Haritaya özelliği ekle
+      vectorSource.addFeature(feature);
+    });
+    }
   }
+
 
   const handleClearWfs=()=>{
     map.getLayers().getArray()
       .filter(layer => layer instanceof VectorLayer)
       .forEach(vectorLayer => vectorLayer.getSource().clear());
+    setFeatureDistanceIsActive(false)
+    setisLayer(false);
+    map.getOverlays().clear();
+    setisWmsClick(false)
+
+    // Çizim interaction'ını al ve kaldır
+    map.getInteractions().forEach(interaction => {
+      if (interaction instanceof Draw) {
+          map.removeInteraction(interaction);
+      }
+    });
+  }
+  function handleFeatureDistanceActive(){
+    setFeatureDistanceIsActive(true)
+    // const  wfsVectorSource = wfsVectorLayer.getSource();
+    // map.getLayers().getArray()
+    // .filter(layer => layer instanceof VectorLayer)
+    // .forEach(vectorLayer =>{
+    //   const source=vectorLayer.getSource()
+    //   const snap = new Snap({
+    //     source:source ,
+    //   });
+    //   map.addInteraction(snap);
+    // });
+ 
+  // setFeatureDistanceIsActive(false)
+  }
+
+
+  const handleFeatureDistance=()=>{
+    
+    console.log(wfsVectorLayer.getSource());
+    const snapInteraction = new Snap({
+      // source: wfsVectorLayer.getSource()
+      source:vectorLayer
+  });
+  //   let source =wfsVectorLayer.getSource();
+  //   const snap = new Snap({
+  //     source: source
+  // });
+  map.addInteraction(snapInteraction)
   }
   return (
     <>
@@ -639,10 +845,8 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         ""
       )}
       <GetWMS handleWmslayerData={handleWmslayerData} clearWms={handleClearWms}></GetWMS>
-      <GetWFS handleSelectedFeatureWFSMap={handleSelectedFeatureWFSMap} handleClearWfs={handleClearWfs}></GetWFS>
-
-      {/* Sırada wfs var. Wfs getir denilecek. Modal acılacak. Feature lar goruntulenecek. Istenen feature lara gore arkaplan da dinamik bir link olusturulup 
-      ona gore istek atılıp geriye donen verideki feature haritaya basılacak.   */}
+      <GetWFS handleSelectedFeatureWFSMap={handleSelectedFeatureWFSMap} handleClearWfs={handleClearWfs} handleFeatureDistanceActive={handleFeatureDistanceActive}></GetWFS>
+      {/* {featureDistanceIsActive===true ? <button className="btn btn-danger distanceButton" onClick={handleFeatureDistance}>Mesafe Ölç</button>:""} */}
     </>
   );
 };

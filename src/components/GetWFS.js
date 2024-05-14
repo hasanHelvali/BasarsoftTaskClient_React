@@ -3,14 +3,17 @@ import { Button, Modal } from 'react-bootstrap'
 import { useMyContext } from '../context/DataContext'
 import { sendRequest } from '../services/httpClient.service'
 
-function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleClearWfs}) {
+function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleClearWfs,handleFeatureDistanceActive}) {
     const [isVisibleWfsModal, setisVisibleWfsModal] = useState(false)
     const [isWFSActive, setisWFSActive] = useState(false)
     const {handleLoading}=useMyContext();
     const [allFeature, setAllFeature] = useState([])
+    const [featureCount, setfeatureCount] = useState(0)
     useEffect(() => {
-        
-    }, [])
+        if(featureCount>1){
+            handleFeatureDistanceActive();
+        }
+    }, [featureCount])
 
     function handleSelectedFeature(e){
         //burada ilgiliveri alındı. Simdi bunu haritada gostermek gerekiyor.
@@ -22,6 +25,7 @@ function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleC
             handleLoading(false)
             handleSelectedFeatureWFSMap(data)
             setisWFSActive(true)
+            setfeatureCount(featureCount+1);
         }).catch((err)=>{
             alert("WFS Alınırken Bir Hata Oluştu...")
             handleLoading(false)

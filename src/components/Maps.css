@@ -142,3 +142,14 @@
     left: 3px; 
     z-index: 2;
 }
+.distanceButton{
+  position: absolute;
+  top: 400px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
+}
+.overlay-background{
+  background-color: black;
+  color: white;
+}
