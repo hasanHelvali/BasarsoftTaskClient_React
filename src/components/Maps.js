@@ -18,6 +18,7 @@ import {
   Interaction,
   Modify,
   MouseWheelZoom,
+  Select,
   Snap,
 } from "ol/interaction";
 import GeoLocation from "../models/GeoLocation";
@@ -46,8 +47,10 @@ import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
 import Fill from "ol/style/Fill";
 import Icon from "ol/style/Icon";
-import { LineString, Point } from "ol/geom";
+import { LineString, Point, Polygon } from "ol/geom";
 import { Circle } from 'ol/style';
+import WFSAlan from "./WFSAlan";
+import { click } from "ol/events/condition";
 
 let map;
 let vectorLayer;
@@ -511,8 +514,9 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     clearImageLayer();
   }
   const [isLayer, setisLayer] = useState(false)
-  const [vectorSource, setVectorSource] = useState(null);
+  const [vectorSource, setVectorSource] = useState();
   const [snapInteractionAdded, setSnapInteractionAdded] = useState(false);
+  const [distanceActive, setdistanceActive] = useState(false)
   // const [feature, setfeature] = useState()
   const handleSelectedFeatureWFSMap=(geoJsonObject)=>{
     setisWmsClick(true)
@@ -572,121 +576,40 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
       });
       map.addLayer(newLayer);//layer haritaya eklendi.
 
-      map.getView().fit(newVectorSource.getExtent());//eklenen feature kadar haritaya yakınlasma yapıldı
+      // map.getView().fit(newVectorSource.getExtent());//eklenen feature kadar haritaya yakınlasma yapıldı
   } else {//eger vectorSource varsa
       const newFeatures = new GeoJSON().readFeatures(geoJsonObject, {//gelen veriye gore feature olusturuluyor
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:3857'
       });
       vectorSource.addFeatures(newFeatures);//vectorSource setlenmisti. bu setlenen yapıya bir feature ekleniyor.
-      map.getView().fit(vectorSource.getExtent());//harita eklenen feature kadar yakınlastırılıyor.
+      // map.getView().fit(vectorSource.getExtent());//harita eklenen feature kadar yakınlastırılıyor.
       //ile haritanın görünümünü Feature’ın sınırlarına göre ayarladım.
-      
-      const draw= new Draw({//yeni bir cizim yaptırıyorum. Bu cizim linestring olacak.
-        
-        source: vectorSource,
-        type: 'LineString',
-      })
-      map.addInteraction(draw);//bu yeni nesne haritaya interaction ekleniyor.
-      // modify.setActive(true);
-    // }
-    snap = new Snap({//bir snap olusturuluyor
-      source: vectorSource
-    });
-    map.addInteraction(snap);//snap de 
-    draw.on('drawend', (event) => {//cizim bittiginde 
-      const feature = new Feature({//feature alınıyor
-        geometry: event.feature.getGeometry(),
-      });
-    
-      const geometry = feature.getGeometry();//geometrisi alınıyor
-      const coordinates = geometry.getCoordinates();//coordinatları alınıyor
-      const length = coordinates.length;//koordanatların uzunlugu alındı
-      const mesafe = geometry.getLength();//koordanatların uzunlugu alındı
-      const midpoint = geometry.getCoordinateAt(0.5);
-    
-      const labelContent = document.createElement('div');
-      labelContent.innerHTML = `Mesafe: ${mesafe.toFixed(2)} m`; // Etiket içeriği
-      const labelStyle = new Style({
-        text: new Text({
-          text: labelContent.innerHTML,
-          scale: 1.5,
-          fill: new Fill({
-            color: '#ffcc33'
-          })
-        })
-      });
-      const labelOverlay = new Overlay({
-        position: midpoint,
-        element: labelContent,
-      });
-      labelContent.classList.add('overlay-background');
-      map.addOverlay(labelOverlay);
-      // Başlangıç ve bitiş noktaları için ok şeklinde stil tanımı
-
-      // Bu fonksiyon, bir koordinat ve dönüş açısı alır ve bir stil döndürür.
-      const arrowStyle = (coordinate, rotation) => new Style({
-        // Yeni bir nokta geometrisi oluşturur ve bu noktaya stil uygular.
-        geometry: new Point(coordinate),
-        // RegularShape ile bir ok şekli oluşturur.
-        image: new RegularShape({
-          // Okun içini siyah renkle doldurur.
-          fill: new Fill({ color: 'black' }),
-          // Okun çevresine siyah, 2 piksel genişliğinde bir çizgi çizer.
-          stroke: new Stroke({
-            color: 'black',
-            width: 2
-          }),
-          // Okun üç köşesi olacak şekilde ayarlar (üçgen şekli için).
-          points: 3,
-          // Okun boyutunu belirler (yarıçap).
-          radius: 10,
-          // Okun haritadaki dönüş açısını ayarlar (radyan cinsinden).
-          rotation: rotation,
-          // Okun başlangıç açısını ayarlar (genellikle 0 olarak bırakılır).
-          angle: 0
-        })
-      });
-
-      
-    
-      // Linestring için varsayılan stil
-      const lineStyle = new Style({
-        stroke: new Stroke({
-          color: 'blue',
-          width: 3
-        })
-      });
-    
-    // Linestring'in başlangıç noktasındaki okun dönüş açısını hesaplar.
-    const startRotation = Math.atan2(
-      coordinates[1][1] - coordinates[0][1], // Y eksenindeki değişim
-      coordinates[1][0] - coordinates[0][0]  // X eksenindeki değişim
-    );
-    // Bu, başlangıç noktasındaki okun linestring yönünde olmasını sağlar.
-
-    // Linestring'in bitiş noktasındaki okun dönüş açısını hesaplar.
-    const endRotation = Math.atan2(
-      coordinates[length - 1][1] - coordinates[length - 2][1], // Y eksenindeki değişim
-      coordinates[length - 1][0] - coordinates[length - 2][0]  // X eksenindeki değişim
-    );
-    // Bu, bitiş noktasındaki okun linestring yönünde olmasını sağlar.
-    
-      // Stilleri uygula
-      feature.setStyle([
-        lineStyle,
-        arrowStyle(coordinates[0], startRotation),
-        arrowStyle(coordinates[length - 1], endRotation)
-      ]);
-    
-      // Haritaya özelliği ekle
-      vectorSource.addFeature(feature);
-    });
+     
     }
   }
 
 
   const handleClearWfs=()=>{
+    setdistanceActive(false)
+    map.getLayers().getArray()
+      .filter(layer => layer instanceof VectorLayer)
+      .forEach(vectorLayer => vectorLayer.getSource().clear());
+    setFeatureDistanceIsActive(false)
+    setisLayer(false);
+    map.getOverlays().clear();
+    setisWmsClick(false)
+
+    // Çizim interaction'ını al ve kaldır
+    map.getInteractions().forEach(interaction => {
+      if (interaction instanceof Draw) {
+          map.removeInteraction(interaction);
+      }
+    });
+  }
+
+  const handleClearWfsDistance=()=>{
+    setdistanceActive(false)
     map.getLayers().getArray()
       .filter(layer => layer instanceof VectorLayer)
       .forEach(vectorLayer => vectorLayer.getSource().clear());
@@ -703,6 +626,7 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     });
   }
   function handleFeatureDistanceActive(){
+    setdistanceActive(true)
     setFeatureDistanceIsActive(true)
     // const  wfsVectorSource = wfsVectorLayer.getSource();
     // map.getLayers().getArray()
@@ -716,21 +640,275 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     // });
  
   // setFeatureDistanceIsActive(false)
+   
+
   }
 
 
-  const handleFeatureDistance=()=>{
-    
-    console.log(wfsVectorLayer.getSource());
-    const snapInteraction = new Snap({
-      // source: wfsVectorLayer.getSource()
-      source:vectorLayer
-  });
-  //   let source =wfsVectorLayer.getSource();
-  //   const snap = new Snap({
-  //     source: source
+  const handleFeatureDistance=(source)=>{
+    setdistanceActive(true);
+    console.log(source);
+    console.log(vectorLayer.getSource());
+    let draw;
+    if(source){
+       draw= new Draw({//yeni bir cizim yaptırıyorum. Bu cizim linestring olacak.
+            
+        source: source,
+        type: 'LineString',
+      })
+      map.addInteraction(draw);//bu yeni nesne haritaya interaction ekleniyor.
+      // modify.setActive(true);
+    // }
+    snap = new Snap({//bir snap olusturuluyor
+      source: vectorSource
+    });
+    map.addInteraction(snap);//snap de 
+    }
+    else{
+      const _source=vectorLayer.getSource()
+      source=_source
+       draw= new Draw({//yeni bir cizim yaptırıyorum. Bu cizim linestring olacak.
+        source: _source,
+        type: 'LineString',
+      })
+      map.addInteraction(draw);//bu yeni nesne haritaya interaction ekleniyor.
+      // modify.setActive(true);
+    // }
+    snap = new Snap({//bir snap olusturuluyor
+      source: _source
+    });
+    map.addInteraction(snap);//snap de 
+    }
+  //   console.log(wfsVectorLayer.getSource());
+  //   const snapInteraction = new Snap({
+  //     // source: wfsVectorLayer.getSource()
+  //     source:vectorLayer
   // });
-  map.addInteraction(snapInteraction)
+  // //   let source =wfsVectorLayer.getSource();
+  // //   const snap = new Snap({
+  // //     source: source
+  // // });
+  // map.addInteraction(snapInteraction)
+
+  map.addInteraction(draw);//bu yeni nesne haritaya interaction ekleniyor.
+  // modify.setActive(true);
+// }
+snap = new Snap({//bir snap olusturuluyor
+  source: source
+});
+map.addInteraction(snap);//snap de 
+draw.on('drawend', (event) => {//cizim bittiginde 
+  const feature = new Feature({//feature alınıyor
+    geometry: event.feature.getGeometry(),
+  });
+
+  const geometry = feature.getGeometry();//geometrisi alınıyor
+  const coordinates = geometry.getCoordinates();//coordinatları alınıyor
+  const length = coordinates.length;//koordanatların uzunlugu alındı
+  const mesafe = geometry.getLength();//koordanatların uzunlugu alındı
+  const midpoint = geometry.getCoordinateAt(0.5);
+
+  const labelContent = document.createElement('div');
+  labelContent.innerHTML = `Mesafe: ${mesafe.toFixed(2)} m`; // Etiket içeriği
+  const labelStyle = new Style({
+    text: new Text({
+      text: labelContent.innerHTML,
+      scale: 1.5,
+      fill: new Fill({
+        color: '#ffcc33'
+      })
+    })
+  });
+  const labelOverlay = new Overlay({
+    position: midpoint,
+    element: labelContent,
+  });
+  labelContent.classList.add('overlay-background');
+  map.addOverlay(labelOverlay);
+  // Başlangıç ve bitiş noktaları için ok şeklinde stil tanımı
+
+  // Bu fonksiyon, bir koordinat ve dönüş açısı alır ve bir stil döndürür.
+  const arrowStyle = (coordinate, rotation) => new Style({
+    // Yeni bir nokta geometrisi oluşturur ve bu noktaya stil uygular.
+    geometry: new Point(coordinate),
+    // RegularShape ile bir ok şekli oluşturur.
+    image: new RegularShape({
+      // Okun içini siyah renkle doldurur.
+      fill: new Fill({ color: 'black' }),
+      // Okun çevresine siyah, 2 piksel genişliğinde bir çizgi çizer.
+      stroke: new Stroke({
+        color: 'black',
+        width: 2
+      }),
+      // Okun üç köşesi olacak şekilde ayarlar (üçgen şekli için).
+      points: 3,
+      // Okun boyutunu belirler (yarıçap).
+      radius: 10,
+      // Okun haritadaki dönüş açısını ayarlar (radyan cinsinden).
+      rotation: rotation,
+      // Okun başlangıç açısını ayarlar (genellikle 0 olarak bırakılır).
+      angle: 0
+    })
+  });
+
+  
+
+  // Linestring için varsayılan stil
+  const lineStyle = new Style({
+    stroke: new Stroke({
+      color: 'blue',
+      width: 3
+    })
+  });
+
+// Linestring'in başlangıç noktasındaki okun dönüş açısını hesaplar.
+const startRotation = Math.atan2(
+  coordinates[1][1] - coordinates[0][1], // Y eksenindeki değişim
+  coordinates[1][0] - coordinates[0][0]  // X eksenindeki değişim
+);
+// Bu, başlangıç noktasındaki okun linestring yönünde olmasını sağlar.
+
+// Linestring'in bitiş noktasındaki okun dönüş açısını hesaplar.
+const endRotation = Math.atan2(
+  coordinates[length - 1][1] - coordinates[length - 2][1], // Y eksenindeki değişim
+  coordinates[length - 1][0] - coordinates[length - 2][0]  // X eksenindeki değişim
+);
+// Bu, bitiş noktasındaki okun linestring yönünde olmasını sağlar.
+
+  // Stilleri uygula
+  feature.setStyle([
+    lineStyle,
+    arrowStyle(coordinates[0], startRotation),
+    arrowStyle(coordinates[length - 1], endRotation)
+  ]);
+
+  // Haritaya özelliği ekle
+  source.addFeature(feature);
+});
+  }
+
+  function createOverlayElement() {
+    // Overlay konteynerini oluştur
+    const overlayContainer = document.createElement('div');
+    overlayContainer.id = 'overlay';
+    overlayContainer.className = 'ol-overlay-container ol-selectable';
+  
+    // Overlay içeriği için div'i oluştur
+    const overlayContent = document.createElement('div');
+    overlayContent.id = 'overlay-content';
+  
+    // İçerik div'ini konteynere ekle
+    overlayContainer.appendChild(overlayContent);
+  
+    // Konteyneri body'ye ekle
+    document.body.appendChild(overlayContainer);
+  
+    return overlayContainer;
+  }
+
+  const getAllWfs=(features)=>{
+    console.log(features);
+    if (features && features.length > 0) {
+      //   const newFeatures = new GeoJSON().readFeatures(geoJsonObject, {//gelen veriye gore feature olusturuluyor
+      //     dataProjection: 'EPSG:4326',
+      //     featureProjection: 'EPSG:3857'
+      // });
+      const vectorSource = new VectorSource();
+      const format = new WKT();
+      // Sadece poligon feature'ları filtrele
+      // const polygonFeatures = features.filter(feature => (feature.type === 'POLYGON' || feature.type === 'Polygon'));
+        const polygonFeatures = features.filter(feature => feature.type.toUpperCase()==="POLYGON");
+      // Poligon feature'larını döngüyle gez
+      polygonFeatures.forEach(feature => {
+
+          // Feature'ı oluştur
+          const polygonGeometry = format.readGeometry(feature.wkt, {
+            dataProjection: 'EPSG:4326', // Kaynak projeksiyon
+            featureProjection: 'EPSG:3857' // Haritanın projeksiyonu
+          });
+
+          const polygonFeature = new Feature({
+              geometry: polygonGeometry,
+          });
+
+          polygonFeature.setStyle(new Style({
+            fill: new Fill({
+              color: 'rgba(255, 0, 0, 0.2)',
+            }),
+            stroke: new Stroke({
+              color: 'red',
+              width: 2,
+            }),
+          }));
+
+          // VectorSource'a feature'ı ekle
+          vectorSource.addFeature(polygonFeature);
+      });
+      const vectorLayer = new VectorLayer({
+        source: vectorSource,
+      });
+      map.addLayer(vectorLayer);
+      const selectInteraction = new Select({
+        condition: click // Tıklama ile seçim yap
+      });
+      map.addInteraction(selectInteraction);
+
+      selectInteraction.on('select', function(e) {
+        e.selected.forEach(function(feature) {
+          feature.setStyle(new Style({
+            fill: new Fill({
+              color: 'rgba(0, 255, 0, 0.5)', // Yeni doldurma rengi
+            }),
+            stroke: new Stroke({
+              color: 'green', // Yeni çizgi rengi
+              width: 4,
+            }),
+          }));
+      
+          // Alan bilgisini hesapla (örneğin metre kare olarak)
+          console.log(feature.getGeometry().getType());
+          let area;
+          let areaInSquareMeters;
+          let areaInSquareKilometers;
+          if(feature.getGeometry().getType()==="Polygon"){
+             area = feature.getGeometry().getArea();//alan icin bir deger getirildi
+             areaInSquareMeters = Math.round(area *100) / 100; // Alanı yuvarla
+             areaInSquareKilometers = (areaInSquareMeters / 1000000).toFixed(0); // Sadece tam sayı kısmını alır
+             // const area = feature.getGeometry().getArea();//alan icin bir deger getirildi
+   
+   
+             createOverlayElement();
+             
+             // Overlay oluştur ve haritaya ekle
+             const overlay = new Overlay({
+               element: document.getElementById('overlay'), // HTML'de bir id ile belirtilmiş element
+               positioning: 'bottom-center',
+               stopEvent: false,
+             });
+             map.addOverlay(overlay);
+             // Overlay içeriğini güncelle ve göster
+             const overlayContent = document.getElementById('overlay-content');
+             console.log(overlayContent);
+             overlayContent.innerHTML = `<div className="overlay-content">Alan: ${areaInSquareKilometers} km²</div>`; // İçerik
+             overlay.setPosition(e.mapBrowserEvent.coordinate); // Overlay pozisyonunu ayarla
+          }
+        });
+      
+        // Deseçim yapıldığında eski stilini geri yükle
+        e.deselected.forEach(function(feature) {//select eventi hala aktif. burada da deselected tetikleniyor.
+          feature.setStyle(new Style({//stili verildi
+            fill: new Fill({
+              color: 'rgba(255, 0, 0, 0.2)',
+            }),
+            stroke: new Stroke({
+              color: 'red',
+              width: 2,
+            }),
+          })); // Varsayılan stile dön
+        });
+      });
+
+    }
   }
   return (
     <>
@@ -845,8 +1023,10 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
         ""
       )}
       <GetWMS handleWmslayerData={handleWmslayerData} clearWms={handleClearWms}></GetWMS>
-      <GetWFS handleSelectedFeatureWFSMap={handleSelectedFeatureWFSMap} handleClearWfs={handleClearWfs} handleFeatureDistanceActive={handleFeatureDistanceActive}></GetWFS>
-      {/* {featureDistanceIsActive===true ? <button className="btn btn-danger distanceButton" onClick={handleFeatureDistance}>Mesafe Ölç</button>:""} */}
+      <GetWFS handleSelectedFeatureWFSMap={handleSelectedFeatureWFSMap} handleClearWfs={handleClearWfs} handleFeatureDistanceActive={handleFeatureDistanceActive} wfsClearButtonActive={distanceActive}></GetWFS>
+      {distanceActive===false ?<button className="btn btn-danger distanceButton" onClick={()=>handleFeatureDistance(vectorSource)}>Mesafe Ölç</button>:
+      <button className="btn btn-danger distanceButton" onClick={()=>{handleClearWfsDistance(); setdistanceActive(false)}}>Mesafe Ölçme Kapat</button>}
+      <WFSAlan allWfs={getAllWfs} clearAlan={handleClearWfs}></WFSAlan>
     </>
   );
 };

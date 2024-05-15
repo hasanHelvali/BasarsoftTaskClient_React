@@ -153,3 +153,14 @@
   background-color: black;
   color: white;
 }
+.wfsAlan{
+  position: absolute;
+  top: 500px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
+}
+.overlay-content{
+  background-color: black;
+  color: white;
+}

@@ -3,7 +3,7 @@ import { Button, Modal } from 'react-bootstrap'
 import { useMyContext } from '../context/DataContext'
 import { sendRequest } from '../services/httpClient.service'
 
-function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleClearWfs,handleFeatureDistanceActive}) {
+function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleClearWfs,handleFeatureDistanceActive,wfsClearButtonActive}) {
     const [isVisibleWfsModal, setisVisibleWfsModal] = useState(false)
     const [isWFSActive, setisWFSActive] = useState(false)
     const {handleLoading}=useMyContext();
@@ -51,7 +51,7 @@ function GetWFS({handleIsOpenAllFeatureModal,handleSelectedFeatureWFSMap,handleC
   return (
     <div className=''>
         <button className='wfsButton btn btn-danger' onClick={getAllWFSFeature}>WFS Getir</button>
-        {isWFSActive===true ?
+        {(isWFSActive===true && wfsClearButtonActive===true)?
             <button className='wfsButton2 btn btn-danger' onClick={()=>{setisWFSActive(false); handleClearWfs()}}>WFS Temizle</button>:""
         }
 
