@@ -3,11 +3,34 @@ import { sendRequest } from '../services/httpClient.service';
 import { useMyContext } from '../context/DataContext';
 import { Dialog } from '@mui/material';
 import { Modal,Button } from 'react-bootstrap';
+import VerifyToken from '../services/Auth.service';
+import { useNavigate } from 'react-router-dom';
 function AllFeatureModal({handleClose,handleIsOpenAllFeatureModal,handleSelectedFeatureMap}) {
     const [allFeature, setallFeature] = useState([])
     const [isOpen, setIsOpen] = useState(false)
     const {laoding,handleLoading,role,username,identifier}=useMyContext()
+    const navigate=useNavigate();
     useEffect(() => {
+        handleLoading(true);
+        VerifyToken()
+          .then((result) => {
+            if (result === true) {
+              setTimeout(() => {
+                handleLoading(false);
+              }, 500);
+            } else {
+              navigate("/login-register");
+              localStorage.removeItem("token");
+              handleLoading(false);
+              return;
+            }
+          })
+          .catch((err) => {
+            navigate("/login-register");
+            localStorage.removeItem("token");
+            handleLoading(false);
+            return;
+          });
         handleLoading(true);
         sendRequest("maps","","GET").then((data)=>{
             console.log(data);

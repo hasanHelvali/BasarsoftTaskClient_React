@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
+import { useMyContext } from '../../context/DataContext';
+import VerifyToken from '../../services/Auth.service';
+import { useNavigate } from 'react-router-dom';
 function RoleDropdownModal({defaultRole,rowData,handleClose,isUpdateRole,handleSave}) {
   const [visible, setVisible] = useState(true);
   const [selectedRole, setSelectedRole] = useState()
   const [disabledButton, setdisabledButton] = useState(true)
+  const {handleLoading,role}=useMyContext();
+  const navigate=useNavigate();
+
  
   const roles=[
     { name: 'Admin',id:1},
@@ -12,6 +18,26 @@ function RoleDropdownModal({defaultRole,rowData,handleClose,isUpdateRole,handleS
   ]
  
   useEffect(() => {
+    handleLoading(true);
+    VerifyToken()
+      .then((result) => {
+        if (result === true) {
+          setTimeout(() => {
+            handleLoading(false);
+          }, 500);
+        } else {
+          navigate("/login-register");
+          localStorage.removeItem("token");
+          handleLoading(false);
+          return;
+        }
+      })
+      .catch((err) => {
+        navigate("/login-register");
+        localStorage.removeItem("token");
+        handleLoading(false);
+        return;
+      });
     setdisabledButton(true)
     setSelectedRole(defaultRole)
   }, [defaultRole])

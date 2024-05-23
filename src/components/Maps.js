@@ -51,6 +51,7 @@ import { LineString, Point, Polygon } from "ol/geom";
 import { Circle } from 'ol/style';
 import WFSAlan from "./WFSAlan";
 import { click } from "ol/events/condition";
+import Chart from "./Chart";
 
 let map;
 let vectorLayer;
@@ -90,6 +91,8 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   const [selectFormActive, setselectFormActive] = useState(false);
 
   const [featureDistanceIsActive, setFeatureDistanceIsActive] = useState(false)
+
+  const [isLogAnalyseActive, setisLogAnalyseActive] = useState(false)
 
   const wfsVectorLayer = new VectorLayer({
     source: undefined,
@@ -910,6 +913,10 @@ const endRotation = Math.atan2(
 
     }
   }
+  const handleCloseChart=()=>{
+    console.log("-----");
+    setisLogAnalyseActive(false)
+  }
   return (
     <>
     {/* <img src={imageUrl} alt="Map Layer" /> */}
@@ -1027,7 +1034,20 @@ const endRotation = Math.atan2(
       {distanceActive===false ?<button className="btn btn-danger distanceButton" onClick={()=>handleFeatureDistance(vectorSource)}>Mesafe Ölç</button>:
       <button className="btn btn-danger distanceButton" onClick={()=>{handleClearWfsDistance(); setdistanceActive(false)}}>Mesafe Ölçme Kapat</button>}
       <WFSAlan allWfs={getAllWfs} clearAlan={handleClearWfs}></WFSAlan>
+      {/* {isLogAnalyseActive===false ? 
+          <button className="btn btn-danger analyseButton">Log Analizi Getir</button>:<Chart></Chart> 
+      } */}
+{/* 
+      {isLogAnalyseActive===true?
+        <button className="btn btn-danger analyseButton" onClick={()=>handleShow()}>Log Analizi Getir</button>:""
+      } */}
+      {role==="SuperAdmin"?
+        <button className="btn btn-danger analyseButton" onClick={()=>setisLogAnalyseActive(true)}>Log Analizi Getir</button>:""
+      }
+      {isLogAnalyseActive===true?<Chart handleClose={handleCloseChart}></Chart>:""}
+      
     </>
   );
+
 };
 export default Maps;
