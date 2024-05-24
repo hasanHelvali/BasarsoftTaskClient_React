@@ -178,3 +178,11 @@
   left: 3px; 
   z-index: 2;
 }
+
+.uploadButton{
+  position: absolute;
+  top: 650px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
+}

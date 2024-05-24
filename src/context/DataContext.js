@@ -15,6 +15,7 @@ const MyContext = createContext();
   const [username, setusername] = useState("")
   const [identifier, setIdentifier] = useState("")
 const [activeAdminPageComponentUrl, setactiveAdminPageComponentUrl] = useState()
+const [geoJsonFile, setGeoJsonFile] = useState()
   //  yakalandığında context'e set etme işlemi
   const handleDataCapture = (_wkt) => {
     setWkt(_wkt);
@@ -56,9 +57,15 @@ const [activeAdminPageComponentUrl, setactiveAdminPageComponentUrl] = useState()
   const handleActiveAdminPageComponentUrl=(value)=>{
     setactiveAdminPageComponentUrl(value)
   }
+  const handleGeoJsonFile=(value)=>{
+    // console.log(value);
+    setGeoJsonFile(value)
+  }
   return (
     <MyContext.Provider value={{ wkt, handleDataCapture,isEndFeatureModalOpen,handleStateModal,featureType,handleFeatureType,isAuth,handleIsAuth
-    ,jwt,handleJWT,loading,handleLoading,role,handleRole,username, handleName,identifier,handleIdentifier,activeAdminPageComponentUrl,handleActiveAdminPageComponentUrl}}>
+    ,jwt,handleJWT,loading,handleLoading,role,handleRole,username, handleName,identifier,handleIdentifier,activeAdminPageComponentUrl,
+    handleActiveAdminPageComponentUrl,
+    geoJsonFile,handleGeoJsonFile}}>
       {children}
     </MyContext.Provider>
   );

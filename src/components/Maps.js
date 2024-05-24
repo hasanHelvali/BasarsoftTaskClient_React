@@ -52,6 +52,8 @@ import { Circle } from 'ol/style';
 import WFSAlan from "./WFSAlan";
 import { click } from "ol/events/condition";
 import Chart from "./Chart";
+import UploadGeojson from "./UploadGeojson";
+import GeoJsonFileView from "./GeoJsonFileView";
 
 let map;
 let vectorLayer;
@@ -93,6 +95,8 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
   const [featureDistanceIsActive, setFeatureDistanceIsActive] = useState(false)
 
   const [isLogAnalyseActive, setisLogAnalyseActive] = useState(false)
+
+  const [isActiveGeoJsonView, setIsActiveGeoJsonView] = useState(false)
 
   const wfsVectorLayer = new VectorLayer({
     source: undefined,
@@ -1046,8 +1050,17 @@ const endRotation = Math.atan2(
       }
       {isLogAnalyseActive===true?<Chart handleClose={handleCloseChart}></Chart>:""}
       
+      <UploadGeojson GeoJsonView={handleViewGeoJson}></UploadGeojson>
+      {<GeoJsonFileView handleCloseComp={handleCloseComp} isShow={isActiveGeoJsonView}></GeoJsonFileView>}
     </>
   );
+  function handleViewGeoJson(){
+    setIsActiveGeoJsonView(true)
+  }
+  function handleCloseComp(){
+    setIsActiveGeoJsonView(false)
+    return "sadad"
+  }
 
 };
 export default Maps;
