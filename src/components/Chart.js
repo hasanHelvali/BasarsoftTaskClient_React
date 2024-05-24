@@ -12,13 +12,13 @@ function Chart({handleClose}) {
 //   const handleClose = () => setShow(false);
 //   const handleShow = () => setShow(true);
   const {handleLoading,role}=useMyContext()
-  const [getLogsAnalyse, setgetLogsAnalyse] = useState()
+  const [logsAnalyse, setLogsAnalyse] = useState([])
   const [logTime, setlogTime] = useState(1)
   useEffect(() => {
     handleLoading(true)
     sendRequest("LogAnalyse","","GET",null,logTime).then((logData)=>{
           handleLoading(false)
-        console.log(logData);
+          analyseStart(logData)
     }).catch((err)=>{
           handleLoading(false)
           console.log(err);
@@ -26,6 +26,32 @@ function Chart({handleClose}) {
   }, [logTime])
   const handleChange=(val)=>{
     setlogTime(val.target.value)
+  }
+  function analyseStart(logs){
+    console.log(logs);
+    const logUserDatas=logs.map(item=>{
+      var parsedMessage=JSON.parse(item.message)
+      console.log(parsedMessage);
+      // return parsedMessage.userName
+      return parsedMessage
+    })
+    const userCount = logUserDatas.reduce((acc, curr) => {
+      const userName = curr.userName;
+      if (acc[userName]) {
+        acc[userName]++;
+      } else {
+        acc[userName] = 1;
+      }
+      return acc;
+    }, {});
+    console.log(userCount);
+    const transformedData = Object.keys(userCount).map(key => {
+      return {
+        value: userCount[key],
+        label: key
+      };
+    });
+    setLogsAnalyse(transformedData)
   }
   function getModal(){
         return <>
@@ -36,8 +62,8 @@ function Chart({handleClose}) {
                
               </Modal.Header>
               <Modal.Body>
-              <Form.Select aria-label="Default select example d-block" onChange={handleChange}>
-                    <option>Zaman Aralığı Seçin</option>
+              <Form.Select aria-label="Default select example d-block" onChange={handleChange} defaultValue={"1"}>
+                    {/* <option>Zaman Aralığı Seçin</option> */}
                     <option value="1">1 Günlük</option>
                     <option value="7">1 Haftalık</option>
                     <option value="30">1 Aylık</option>
@@ -45,11 +71,7 @@ function Chart({handleClose}) {
                   <PieChart
                   series={[
                       {
-                          data: [
-                              {value: 10, label: 'series A' },
-                              {value: 15, label: 'series B' },
-                              {value: 20, label: 'series C' },
-                          ],
+                            data: logsAnalyse
                       },
                   ]}
                   width={400}
