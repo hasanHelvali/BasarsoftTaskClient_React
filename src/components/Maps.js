@@ -54,6 +54,7 @@ import { click } from "ol/events/condition";
 import Chart from "./Chart";
 import UploadGeojson from "./UploadGeojson";
 import GeoJsonFileView from "./GeoJsonFileView";
+import ExportGeoJson from "./ExportGeoJson";
 
 let map;
 let vectorLayer;
@@ -302,7 +303,6 @@ const Maps = ({ handleSelectedFeatureMap, handleCloseInteraction }) => {
     console.log(item);
   };
   const setShowFeatureFunc = (value) => {
-    debugger
     //openlayers icin en onemli fonksiyon
     setShowFeature(value);
     //id dahil butun veri burada valeu nun icinde
@@ -1052,6 +1052,8 @@ const endRotation = Math.atan2(
       
       <UploadGeojson GeoJsonView={handleViewGeoJson}></UploadGeojson>
       {<GeoJsonFileView handleCloseComp={handleCloseComp} isShow={isActiveGeoJsonView}></GeoJsonFileView>}
+
+      <ExportGeoJson></ExportGeoJson>
     </>
   );
   function handleViewGeoJson(){

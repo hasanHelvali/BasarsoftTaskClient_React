@@ -24,6 +24,8 @@ export function sendRequest(controller,action, method,bodyData,queryData) {
       console.log(queryData);
     return fetch(`${getApiUrl()}/${controller}${action?"/"+action:""}${queryData?"/"+queryData:""}`, options)
       .then(response => {
+        var a=getApiUrl()+"/"+controller+(action?"/"+action:"")+(queryData?"/"+queryData:"");
+        console.log(a);
         // Yanıtın durumuna göre işlemler
         if (!response.ok) {
           console.log(response);

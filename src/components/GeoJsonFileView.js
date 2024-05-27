@@ -6,10 +6,14 @@ import Table from 'react-bootstrap/Table';
 import WKT from 'ol/format/WKT';
 import { GeoJSON } from 'ol/format';
 import { Feature } from 'ol';
+import { sendRequest } from '../services/httpClient.service';
+import { LineString, Point, Polygon } from 'ol/geom';
+import { LocAndUsers } from '../models/LocAndUser';
 function GeoJsonFileView({ isShow, handleCloseComp }) {
     const { geoJsonFile, handleGeoJsonFile } = useMyContext();
     const [parsedGeoJson, setParsedGeoJson] = useState(null);
-
+    const [selectedFeatures, setSelectedFeatures] = useState({});
+    const {handleLoading}=useMyContext();
     const handleClose = () => {
         handleCloseComp();
         handleGeoJsonFile(null);
@@ -66,10 +70,12 @@ function GeoJsonFileView({ isShow, handleCloseComp }) {
         });
         // console.log(wktGeometries);
         
+
         return (
             <Table striped bordered hover>
                 <thead>
                     <tr> 
+                        <th>Uygula</th>
                         {headers.map(header => (
                             <th key={header}>{header}</th>
                         ))}
@@ -79,20 +85,110 @@ function GeoJsonFileView({ isShow, handleCloseComp }) {
                 {/* Her bir feature için bir satır oluşturun */}
                 {parsedGeoJson.features.map((feature, index) => (
                     <tr key={index}>
-                        {/* Her özelliği uygun sütuna yerleştirin */}
+                            <input
+                                type="checkbox"
+                                checked={!!selectedFeatures[index]}
+                                onChange={() => handleCheckboxChange(index)}
+                                /*Her degistiginde handleCheckboxChange tetiklenir. Ilgili index parametre olarak gecilir. */
+                            />
+                        {/* Her özelliği uygun sütuna yerlestirilir */}
                         <td>{feature.properties.id}</td>
                         <td>{feature.properties.name}</td>
                         <td>{feature.geometry.type}</td>
                         <td>{wktGeometries[index]}</td>
                     </tr>
-                    /*Bundan sonra yapılacak islem ise buradaki objeleri bir nesneye map leyecez. Daha sonrasında butun listedeki gosterimlerin yanına 
-                    bir selectbox koyup gidecek verileri elde edip en sonunda secili verileri gonderecez. */
                 ))}
             </tbody>
             </Table>
         );
     };
 
+    const handleCheckboxChange = (index) => {
+        setSelectedFeatures(prev => ({
+            ...prev,//ne kadar deger varsa bunları alor.
+            //...prev: Spread operatörü kullanılarak önceki state'in (yani selectedFeatures'in) tüm mevcut anahtar-değer çiftleri kopyalanır.
+            [index]: !prev[index]//sadece ilgili indexi tersine cevirir.
+            //[index]: !prev[index]: Verilen index için mevcut değerin tersine çevrilmiş hali (true ise false, false ise true) yeni değere atanır.
+        }));
+    };
+
+    const handleSave = () => {
+        const wktFormat = new WKT();
+        const geoJsonFormat = new GeoJSON();
+
+        const selectedData = parsedGeoJson.features.filter((_, index) => selectedFeatures[index]);
+        //parsedGeoJson daki bilgilerden state te true olarak isaretlenenleri alır.
+
+        console.log("Selected features:", selectedData);
+        // İlgili veriyi burada işleyebilir veya kaydedebilirsiniz
+
+
+        // const features = selectedData.map(data=>{
+        //     console.log(data.geometry);
+        //     data.geometry.map(jsonFeature => {//feature uzerinde donuyoruz
+        //         const geometry = geoJsonFormat.readGeometry(jsonFeature.geometry);//ilgili geometry filed i bir degisken uzeirne alındı. Burada GeoJSON sınıfını kullandık.
+        //         const feature = new Feature({ geometry });//feature a cevrildi.
+        //         return feature;//feature lar birikimli bir sekilde donuldu.
+        //     });
+        // })
+    //    const features = selectedData.map(data=>{
+    //         const features = data.features.map(jsonFeature => {//feature uzerinde donuyoruz
+    //             const geometry = geoJsonFormat.readGeometry(jsonFeature.geometry);//ilgili geometry filed i bir degisken uzeirne alındı. Burada GeoJSON sınıfını kullandık.
+    //             const feature = new Feature({ geometry });//feature a cevrildi.
+    //             return feature;//feature lar birikimli bir sekilde donuldu.
+    //         });
+    //         return features;
+    //     })
+        // console.log(features);
+        
+        // const wktGeometries = features.map(feature => {//feature lar uzerinde donuyoruz.
+        //     const wktGeometry = wktFormat.writeFeature(feature);//feature lar wkt ye yazıldı. 
+        //     return wktGeometry;//birikimli bir sekilde donuldu.
+        // });
+        const createGeometry = (type, coordinates) => {
+            switch (type) {
+                case 'Point':
+                    return new Point(coordinates);
+                case 'LineString':
+                    return new LineString(coordinates);
+                case 'Polygon':
+                    return new Polygon(coordinates);
+                default:
+                    throw new Error(`Unsupported geometry type: ${type}`);
+            }
+        };
+        
+        const result = selectedData.map(feature => {
+            const name = feature.properties.name;
+            const type = feature.geometry.type;
+            const coordinates = feature.geometry.coordinates;
+            
+            // Dinamik olarak geometri oluşturma
+            const geometry = createGeometry(type, coordinates);//feature olsuturduk.
+            
+            // WKT formatına dönüştürme
+            const wkt = wktFormat.writeGeometry(geometry);
+            
+            const locAndUser=new LocAndUsers();
+            locAndUser.name=name;
+            locAndUser.type=type;
+            locAndUser.wkt=wkt;
+            return locAndUser
+        });
+        console.log(result);
+        handleLoading(true)
+        sendRequest("maps","GeoJsonSaveList","POST",result).then((value)=>{
+            handleLoading(false)
+            alert("Kayıt Başarıyla Eklenmiştir.")
+            handleClose();
+          }).catch((err)=>{
+            handleLoading(false)
+            console.log(err);
+            alert("Kayıt Eklenirken Bir Hata Oluştu")
+            handleClose()
+            return;
+          })
+    };
     return (
         <Modal show={isShow} onHide={handleClose}>
             <Modal.Header closeButton>
@@ -100,6 +196,10 @@ function GeoJsonFileView({ isShow, handleCloseComp }) {
             </Modal.Header>
             <Modal.Body>{renderTable()}</Modal.Body>
             <Modal.Footer>
+                <Button variant="warning" onClick={handleSave}>
+                    {/* handleSave Tetiklenir. */}
+                    Save
+                </Button>
                 <Button variant="secondary" onClick={handleClose}>
                     Close
                 </Button>

@@ -186,3 +186,10 @@
   left: 3px; 
   z-index: 2;
 }
+.exportButton{
+  position: absolute;
+  top: 720px;
+  width: 8rem;
+  left: 3px; 
+  z-index: 2;
+}

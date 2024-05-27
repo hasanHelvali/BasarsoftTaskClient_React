@@ -13,7 +13,6 @@ function SelectForm({ onSelectChange , disable }) {
         const _selectedValue = event.target.value;
         onSelectChange(_selectedValue); // selectedValue'yi Parent bileşene iletiyoruz. props geciyorum.
         handleFeatureType(event.target.value)//featureType i context te guncelliyorum.
-        console.log(featureType);
       };
   return (
     <>
